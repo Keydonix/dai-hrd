@@ -1,0 +1,26 @@
+{
+	"name": "@keydonix/dai-hrd",
+	"version": "1.0.0",
+	"description": "DAI: Hodl Rated DAI  -  A DAI token wrapper that benefits from the Dai Savings Rate (interest).",
+	"repository": "github:keydonix/dai-hrd",
+	"author": "Keydonix",
+	"license": "Unlicense",
+	"devDependencies": {
+		"@openzeppelin/contracts": "2.3.0",
+		"ganache-cli": "6.7.0",
+		"solc": "0.5.12",
+		"truffle": "5.0.42",
+		"truffle-typings": "1.0.8",
+		"ts-node": "8.4.1",
+		"typechain": "1.0.3",
+		"typechain-target-truffle": "1.0.0",
+		"typescript": "3.6.4"
+	},
+	"dependencies": {
+	},
+	"scripts": {
+		"start-ganache": "ganache-cli",
+		"build": "truffle compile && typechain --target truffle ./build/**/*.json",
+		"deploy": "npm run build && truffle migrate --reset"
+	}
+}

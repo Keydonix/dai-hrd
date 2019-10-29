@@ -1,0 +1,12 @@
+{
+	"compilerOptions": {
+		"target": "es2019",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"noEmit": true,
+		"strict": true,
+		"lib": ["es2019"],
+		"types": ["truffle-typings"]
+	},
+	"include": ["test/**/*.ts"],
+}
