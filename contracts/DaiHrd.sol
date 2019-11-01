@@ -40,6 +40,23 @@ contract DaiHrd is ERC777 {
 
 	function deposit(uint256 attodai) external returns(uint256 depositedAttodsr) {
 		dai.transferFrom(msg.sender, address(this), attodai);
+		return depositForUser(msg.sender);
+	}
+
+	function depositOnBehalfOfUser(address user) external returns(uint256 depositedAttodsr) {
+		sweepFromUser(user);
+		return depositForUser(user);
+	}
+
+	function sweepFromUser(address user) private {
+		// This code simply sweeps all dai from contract address to msg.sender (the DaiHrd contract)
+		bytes memory code = 0x11; // TODO: write this. can this refer to an inline solidity-defined contract?
+		assembly {
+			addr := create2(0, add(code, 0x20), mload(code), salt)
+		}
+	}
+
+	function depositForUser(address user) private returns(uint256 depositedAttodsr) {
 		daiJoin.join(address(this), dai.balanceOf(address(this)));
 
 		if (dsr.rho() != now) dsr.drip();
@@ -47,9 +64,10 @@ contract DaiHrd is ERC777 {
 		uint256 attodsrToDeposit = vat.dai(address(this)) / rontodaiPerDsr;
 
 		dsr.join(attodsrToDeposit);
-		_mint(address(0), msg.sender, attodsrToDeposit, new bytes(0), new bytes(0));
+		_mint(address(0), user, attodsrToDeposit, new bytes(0), new bytes(0));
 		return attodsrToDeposit;
 	}
+
 
 	function withdraw(uint256 attodaiHrd) external returns(uint256 attodai) {
 		if (dsr.rho() != now) dsr.drip();
@@ -69,5 +87,12 @@ contract DaiHrd is ERC777 {
 		attorontodai = vat.dai(address(this));
 		vat.move(address(this), msg.sender, attorontodai);
 		return attorontodai;
+	}
+}
+
+contract DaiSweeper {
+	constructor(IERC20 dai) public {
+		dai.transfer(msg.sender, dai.balanceOf(this));
+		selfdestruct(msg.sender);
 	}
 }
