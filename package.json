@@ -21,6 +21,6 @@
 	"scripts": {
 		"start-ganache": "ganache-cli",
 		"build": "truffle compile && typechain --target truffle ./build/**/*.json",
-		"deploy": "npm run build && truffle migrate --reset"
+		"deploy": "truffle migrate --reset"
 	}
 }
