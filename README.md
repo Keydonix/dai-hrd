@@ -3,6 +3,11 @@ DAI: Hodl Rated DAI  -  A DAI token wrapper that benefits from the Dai Savings R
 
 # Development
 
+## Setup
+```
+npm install
+git update-index --assume-unchanged .\build\contracts\UniswapExchangeTemplate.json .\build\contracts\UniswapFactory.json .\contracts\RuntimeConstants.sol
+```
 ## Build
 ```
 npm run build

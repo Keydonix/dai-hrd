@@ -6,18 +6,19 @@
 	"author": "Keydonix",
 	"license": "Unlicense",
 	"devDependencies": {
-		"@openzeppelin/contracts": "2.3.0",
+		"@openzeppelin/contracts": "2.4.0",
+		"@truffle/contract": "4.0.38",
+		"@truffle/workflow-compile": "2.1.11",
 		"ganache-cli": "6.7.0",
 		"solc": "0.5.12",
-		"truffle": "5.0.42",
+		"truffle": "micah",
 		"truffle-typings": "1.0.8",
 		"ts-node": "8.4.1",
 		"typechain": "1.0.3",
 		"typechain-target-truffle": "1.0.0",
 		"typescript": "3.6.4"
 	},
-	"dependencies": {
-	},
+	"dependencies": {},
 	"scripts": {
 		"start-ganache": "ganache-cli",
 		"build": "truffle compile && typechain --target truffle ./build/**/*.json",
