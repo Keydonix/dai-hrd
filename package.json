@@ -20,7 +20,7 @@
 	},
 	"dependencies": {},
 	"scripts": {
-		"start-ganache": "ganache-cli",
+		"start-ganache": "ganache-cli --gasLimit 8000000",
 		"build": "truffle compile && typechain --target truffle ./build/**/*.json",
 		"deploy": "truffle migrate --reset"
 	}
