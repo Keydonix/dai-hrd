@@ -2,26 +2,38 @@ const path = require('path')
 const fs = require('fs').promises
 const WorkflowCompile = require('@truffle/workflow-compile')
 
+const PIT_BURNER_ADDRESS = '0x0000000000000000000000000000000000000000'
+const MIN_SHUTDOWN_STAKE = 1
 
-module.exports = async function(deployer, network, [account]) {
+module.exports = async function (deployer, network, [account]) {
 	const chainId = await getChainId()
 	await deployer.deploy(artifacts.require('Migrations'))
 	await deployErc1820(account)
-	const dssDeploy = await deployDssDeploy(deployer);
-	await dssDeploy.deployVat();
-	await dssDeploy.deployDai(chainId);
-	// deployTaxationAndAuctions
-	// deployLiquidator
-	// deployShutdown
-	// deployCollateral
-	// releaseAuth
-	// releaseAuthFlip
-	const dai = await deployer.deploy(artifacts.require('Dai'), chainId)
-	const vat = await deployer.deploy(artifacts.require('Vat'))
-	const pot = await deployer.deploy(artifacts.require('Pot'), vat.address)
-	const daiJoin = await deployer.deploy(artifacts.require('DaiJoin'), vat.address, dai.address)
-	const uniswapFactory = await deployUniswapFactory(deployer)
-	await deployDaiHrd(deployer, dai, vat, pot, daiJoin, uniswapFactory)
+	const mkrToken = await deployer.deploy(artifacts.require('DSToken'), web3.utils.asciiToHex('MKR'))
+	const dssDeploy = await deployDssDeploy(deployer)
+	await dssDeploy.deployVat()
+	await dssDeploy.deployDai(chainId)
+	await dssDeploy.deployTaxationAndAuctions(mkrToken.address)
+	await dssDeploy.deployLiquidator()
+	await dssDeploy.deployShutdown(mkrToken.address, PIT_BURNER_ADDRESS, MIN_SHUTDOWN_STAKE)
+	const [daiAddress, vatAddress, potAddress, daiJoinAddress] = await Promise.all(
+		[
+			dssDeploy.dai(),
+			dssDeploy.vat(),
+			dssDeploy.pot(),
+			dssDeploy.daiJoin()
+		])
+	const uniswapFactoryContract = await deployUniswapFactory(deployer)
+	// await dssDeploy.deployCollateral
+	// await dssDeploy.releaseAuth
+	// await dssDeploy.releaseAuthFlip
+	await deployDaiHrd(
+		deployer,
+		daiAddress,
+		vatAddress,
+		potAddress,
+		daiJoinAddress,
+		uniswapFactoryContract)
 }
 
 async function getChainId() {
@@ -94,10 +106,10 @@ import "./PotLike.sol";
 import "./VatLike.sol";
 
 contract RuntimeConstants {
-	IERC20 constant public dai = IERC20(${dai.address.toString(16).padStart(40, '0')});
-	PotLike constant public pot = PotLike(${pot.address.toString(16).padStart(40, '0')});
-	DaiJoinLike constant public daiJoin = DaiJoinLike(${daiJoin.address.toString(16).padStart(40, '0')});
-	VatLike constant public vat = VatLike(${vat.address.toString(16).padStart(40, '0')});
+	IERC20 constant public dai = IERC20(${dai});
+	PotLike constant public pot = PotLike(${pot});
+	DaiJoinLike constant public daiJoin = DaiJoinLike(${daiJoin});
+	VatLike constant public vat = VatLike(${vat});
 	address constant public uniswapExchange = ${uniswapExchangeAddress.toString(16).padStart(40, '0')};
 }
 `
