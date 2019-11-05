@@ -1,12 +1,17 @@
 {
 	"compilerOptions": {
-		"target": "es2019",
+		"target": "esnext",
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"noEmit": true,
 		"strict": true,
-		"lib": ["es2019"],
+		// everything is terrible: truffle doesn't actually run .ts tests as TS, it just runs them as JS, which means no type signatures!
+		"noImplicitAny": false,
+		"lib": ["es2019", "esnext.bigint"],
 		"types": ["truffle-typings"]
 	},
-	"include": ["test/**/*.ts"],
+	"include": [
+		"test/**/*.ts",
+		"types/**/*.ts",
+	],
 }
