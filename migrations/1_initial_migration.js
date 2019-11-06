@@ -84,33 +84,23 @@ async function deployErc1820(account) {
 }
 
 async function deployDssDeploy(deployer) {
-	const vatFab     = await deployer.deploy(artifacts.require('VatFab'))
-	const jugFab     = await deployer.deploy(artifacts.require('JugFab'))
-	const vowFab     = await deployer.deploy(artifacts.require('VowFab'))
-	const catFab     = await deployer.deploy(artifacts.require('CatFab'))
-	const daiFab     = await deployer.deploy(artifacts.require('DaiFab'))
-	const daiJoinFab = await deployer.deploy(artifacts.require('DaiJoinFab'))
-	const flapFab     = await deployer.deploy(artifacts.require('FlapFab'))
-	const flopFab     = await deployer.deploy(artifacts.require('FlopFab'))
-	const flipFab     = await deployer.deploy(artifacts.require('FlipFab'))
-	const spotFab    = await deployer.deploy(artifacts.require('SpotFab'))
-	const potFab     = await deployer.deploy(artifacts.require('PotFab'))
-	const endFab     = await deployer.deploy(artifacts.require('EndFab'))
-	const esmFab     = await deployer.deploy(artifacts.require('ESMFab'))
+	const fabs = [
+		'VatFab',
+		'JugFab',
+		'VowFab',
+		'CatFab',
+		'DaiFab',
+		'DaiJoinFab',
+		'FlapFab',
+		'FlopFab',
+		'FlipFab',
+		'SpotFab',
+		'PotFab',
+		'EndFab',
+		'ESMFab']
+	const fabContracts = await Promise.all(fabs.map(fab => deployer.deploy(artifacts.require(fab))))
 	return deployer.deploy(artifacts.require('DssDeploy'),
-		vatFab.address,
-		jugFab.address,
-		vowFab.address,
-		catFab.address,
-		daiFab.address,
-		daiJoinFab.address,
-		flapFab.address,
-		flopFab.address,
-		flipFab.address,
-		spotFab.address,
-		potFab.address,
-		endFab.address,
-		esmFab.address,
+		...fabContracts.map(fab => fab.address)
 	)
 }
 
