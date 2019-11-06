@@ -23,6 +23,35 @@ module.exports = async function (deployer, network, [account]) {
 			dssDeploy.pot(),
 			dssDeploy.daiJoin()
 		])
+
+	// const wethToken = await deployer.deploy(artifacts.require('WETH9_'), web3.utils.asciiToHex('MKR'))
+	const ethJoin = await deployer.deploy(artifacts.require('ETHJoin'), vatAddress, web3.utils.asciiToHex('ETH-A'))
+	const priceFeed = await deployer.deploy(artifacts.require('DSValue'))
+	await priceFeed.poke('0x' + web3.utils.toWei("2", "ether"));
+	await dssDeploy.deployCollateral(web3.utils.asciiToHex("ETH-A"), ethJoin.address, priceFeed.address)
+	await ethJoin.join(account, { value: web3.utils.toWei("2", "ether")} )
+	// let newVar = await ethJoin.exit(account, 11);
+	// console.log("exit", newVar)
+	const vatContract = await artifacts.require('Vat').at(vatAddress);
+	const daiContract = await artifacts.require('Dai').at(daiAddress);
+	const daiJoinContract = await artifacts.require('DaiJoin').at(daiJoinAddress);
+	await vatContract.file(web3.utils.asciiToHex("ETH-A"), web3.utils.asciiToHex("line"), "0x99999999999999999999999999999999999999999999999")
+	await vatContract.file(web3.utils.asciiToHex("ETH-A"), web3.utils.asciiToHex("spot"), "0x99999999999999999999999999999999999999999999999")
+	await vatContract.file(web3.utils.asciiToHex("Line"), "0x99999999999999999999999999999999999999999999999")
+	console.log("about to frob")
+	console.log(await vatContract.gem(web3.utils.asciiToHex("ETH-A"), account))
+	console.log(await vatContract.dai(account))
+	let frob = await vatContract.frob(web3.utils.asciiToHex("ETH-A"), account, account, account, web3.utils.toWei("1", "ether"), web3.utils.toWei("1", "ether"));
+	console.log("frob", frob);
+	console.log(await vatContract.gem(web3.utils.asciiToHex("ETH-A"), account))
+	console.log(await vatContract.dai(account))
+
+	await vatContract.hope(daiJoinAddress);
+
+	console.log(await daiContract.balanceOf(account))
+	await daiJoinContract.exit(account, 44)
+	console.log(await daiContract.balanceOf(account))
+
 	const uniswapFactoryContract = await deployUniswapFactory(deployer)
 	// await dssDeploy.deployCollateral
 	// await dssDeploy.releaseAuth
