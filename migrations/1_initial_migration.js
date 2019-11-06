@@ -2,7 +2,16 @@ const path = require('path')
 const fs = require('fs').promises
 const WorkflowCompile = require('@truffle/workflow-compile')
 
+const WEI_TO_DEPOSIT = web3.utils.toWei("10", "ether")
+const DAI_TO_CREATE  = web3.utils.toWei("80", "ether")
+
+const FIXED_FEED_PRICE = web3.utils.toWei("190", "gether") // Unit = 1e27
+const DEBT_CEILING     = web3.utils.toWei("10000000000000000000000", "gether") // Unit = 1e45
+
+const ETH_COLLATERAL_ID = web3.utils.asciiToHex('ETH-A')
+
 const PIT_BURNER_ADDRESS = '0x0000000000000000000000000000000000000000'
+const FAKE_PRICE_FEED_ADDRESS = '0x0000000000000000000000000000000000000000'
 const MIN_SHUTDOWN_STAKE = 1
 
 module.exports = async function (deployer, network, [account]) {
@@ -23,17 +32,35 @@ module.exports = async function (deployer, network, [account]) {
 			dssDeploy.pot(),
 			dssDeploy.daiJoin()
 		])
-	const uniswapFactoryContract = await deployUniswapFactory(deployer)
-	// await dssDeploy.deployCollateral
+
+	const vatContract = await artifacts.require('Vat').at(vatAddress)
+
+	const ethJoin = await deployCollateral(deployer, dssDeploy, vatContract)
+
+	await createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiAddress)
+
+	// These functions unset the auth of the dssDeploy itself
 	// await dssDeploy.releaseAuth
 	// await dssDeploy.releaseAuthFlip
-	await deployDaiHrd(
+
+	const uniswapFactoryContract = await deployUniswapFactory(deployer)
+	const daiHrdContract = await deployDaiHrd(
 		deployer,
 		daiAddress,
 		vatAddress,
 		potAddress,
 		daiJoinAddress,
 		uniswapFactoryContract)
+
+	const contractAddresses = {
+		vat: vatAddress,
+		dai: daiAddress,
+		ethJoin: ethJoin.address,
+		dssDeploy: dssDeploy.address,
+		daiHrd: daiHrdContract.address,
+		account,
+	}
+	console.log(contractAddresses)
 }
 
 async function getChainId() {
@@ -57,35 +84,59 @@ async function deployErc1820(account) {
 }
 
 async function deployDssDeploy(deployer) {
-	const vatFab = await deployer.deploy(artifacts.require('VatFab'))
-	const jugFab = await deployer.deploy(artifacts.require('JugFab'))
-	const vowFab = await deployer.deploy(artifacts.require('VowFab'))
-	const catFab = await deployer.deploy(artifacts.require('CatFab'))
-	const daiFab = await deployer.deploy(artifacts.require('DaiFab'))
-	const daiJoinFab = await deployer.deploy(artifacts.require('DaiJoinFab'))
-	const flapFab = await deployer.deploy(artifacts.require('FlapFab'))
-	const flopFab = await deployer.deploy(artifacts.require('FlopFab'))
-	const flipFab = await deployer.deploy(artifacts.require('FlipFab'))
-	const spotFab = await deployer.deploy(artifacts.require('SpotFab'))
-	const potFab = await deployer.deploy(artifacts.require('PotFab'))
-	const endFab = await deployer.deploy(artifacts.require('EndFab'))
-	const esmFab = await deployer.deploy(artifacts.require('ESMFab'))
+	const fabs = [
+		'VatFab',
+		'JugFab',
+		'VowFab',
+		'CatFab',
+		'DaiFab',
+		'DaiJoinFab',
+		'FlapFab',
+		'FlopFab',
+		'FlipFab',
+		'SpotFab',
+		'PotFab',
+		'EndFab',
+		'ESMFab']
+	const fabContracts = await Promise.all(fabs.map(fab => deployer.deploy(artifacts.require(fab))))
 	return deployer.deploy(artifacts.require('DssDeploy'),
-		vatFab.address,
-		jugFab.address,
-		vowFab.address,
-		catFab.address,
-		daiFab.address,
-		daiJoinFab.address,
-		flapFab.address,
-		flopFab.address,
-		flipFab.address,
-		spotFab.address,
-		potFab.address,
-		endFab.address,
-		esmFab.address,
+		...fabContracts.map(fab => fab.address)
 	)
 }
+
+// Deploy the Ether-direct collateral (no wrapped ETH)
+async function deployCollateral(deployer, dssDeploy, vatContract) {
+	const ethJoin = await deployer.deploy(artifacts.require('ETHJoin'), vatContract.address, ETH_COLLATERAL_ID)
+	await dssDeploy.deployCollateral(ETH_COLLATERAL_ID, ethJoin.address, FAKE_PRICE_FEED_ADDRESS)
+	await vatContract.file(ETH_COLLATERAL_ID, web3.utils.asciiToHex("line"), DEBT_CEILING)
+	await vatContract.file(ETH_COLLATERAL_ID, web3.utils.asciiToHex("spot"), FIXED_FEED_PRICE)
+	await vatContract.file(web3.utils.asciiToHex("Line"), DEBT_CEILING)
+	return ethJoin
+}
+
+async function createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiAddress) {
+	const daiJoinContract = await artifacts.require('DaiJoin').at(daiJoinAddress)
+	const daiContract = await artifacts.require('Dai').at(daiAddress)
+
+	// Authorize the daiJoin to modify our vat dai balances
+	await vatContract.hope(daiJoinAddress)
+
+	// Deposit eth into vat
+	await ethJoin.join(account, {value: WEI_TO_DEPOSIT})
+
+	console.log("\nBefore Depositing into Vault:")
+	await printBalances(account, vatContract, daiContract)
+	await vatContract.frob(ETH_COLLATERAL_ID, account, account, account, WEI_TO_DEPOSIT, DAI_TO_CREATE)
+
+	console.log("\nAfter Depositing into Vault:")
+	await printBalances(account, vatContract, daiContract)
+
+	await daiJoinContract.exit(account, DAI_TO_CREATE )
+
+	console.log("\nAfter Withdrawing DAI Into ERC20:")
+	await printBalances(account, vatContract, daiContract)
+}
+
 
 async function deployUniswapFactory(deployer) {
 	const uniswapExchangeTemplate = await deployer.deploy(artifacts.require('UniswapExchangeTemplate'))
@@ -122,4 +173,10 @@ contract RuntimeConstants {
 	await uniswapFactory.createExchange(daiHrd.address)
 	if (await daiHrd.uniswapExchange() !== await uniswapFactory.getExchange(daiHrd.address)) throw new Error(`daiHrd.uniswapExchange() (${await daiHrd.uniswapExchange()}) !== uniswapFactory.getExchange(daiHrd) (${await uniswapFactory.getExchange(daiHrd.address)})`)
 	return daiHrd
+}
+
+async function printBalances(account, vatContract, daiContract) {
+	console.log(`VAT ETH   : ${await vatContract.gem(ETH_COLLATERAL_ID, account)}`)
+	console.log(`VAT DAI   : ${await vatContract.dai(account)}`)
+	console.log(`DAI ERC20 : ${await daiContract.balanceOf(account)}`)
 }

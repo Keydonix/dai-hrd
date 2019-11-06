@@ -225,6 +225,7 @@ contract DssDeploy {
 
         // Internal auth
         vat.rely(address(spotter));
+        vat.rely(msg.sender); // Keydonix added this, to allow direct 'flip' (parameter updates)
     }
 
     function deployDai(uint256 chainId) public {
