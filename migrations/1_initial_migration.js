@@ -185,6 +185,7 @@ async function printBalances(account, vatContract, daiContract) {
 	console.log(`DAI ERC20 : ${await daiContract.balanceOf(account)}`)
 }
 
+// Needs to handle signed values when we get there
 function decimalValueToHex(value, decimals) {
 	return '0x' + (value * (10n ** decimals)).toString(16)
 }
