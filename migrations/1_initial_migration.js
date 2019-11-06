@@ -2,11 +2,15 @@ const path = require('path')
 const fs = require('fs').promises
 const WorkflowCompile = require('@truffle/workflow-compile')
 
-const WEI_TO_DEPOSIT = web3.utils.toWei("10", "ether")
-const DAI_TO_CREATE  = web3.utils.toWei("80", "ether")
+const ETH_TO_DEPOSIT = 10n
+const DAI_TO_CREATE  = 80n
+const FIXED_FEED_PRICE_IN_USD = 190n
+const DAI_DEBT_CEILING = 1000n
 
-const FIXED_FEED_PRICE = web3.utils.toWei("190", "gether") // Unit = 1e27
-const DEBT_CEILING     = web3.utils.toWei("10000000000000000000000", "gether") // Unit = 1e45
+const ETH_DECIMALS = 18n
+const DAI_DECIMALS = 18n
+const FIXED_FEED_PRICE_DECIMALS = 27n
+const DAI_DEBT_CEILING_DECIMALS = 45n
 
 const ETH_COLLATERAL_ID = web3.utils.asciiToHex('ETH-A')
 
@@ -108,9 +112,9 @@ async function deployDssDeploy(deployer) {
 async function deployCollateral(deployer, dssDeploy, vatContract) {
 	const ethJoin = await deployer.deploy(artifacts.require('ETHJoin'), vatContract.address, ETH_COLLATERAL_ID)
 	await dssDeploy.deployCollateral(ETH_COLLATERAL_ID, ethJoin.address, FAKE_PRICE_FEED_ADDRESS)
-	await vatContract.file(ETH_COLLATERAL_ID, web3.utils.asciiToHex("line"), DEBT_CEILING)
-	await vatContract.file(ETH_COLLATERAL_ID, web3.utils.asciiToHex("spot"), FIXED_FEED_PRICE)
-	await vatContract.file(web3.utils.asciiToHex("Line"), DEBT_CEILING)
+	await vatContract.file(ETH_COLLATERAL_ID, web3.utils.asciiToHex("line"), decimalValueToHex(DAI_DEBT_CEILING, DAI_DEBT_CEILING_DECIMALS))
+	await vatContract.file(web3.utils.asciiToHex("Line"), decimalValueToHex(DAI_DEBT_CEILING, DAI_DEBT_CEILING_DECIMALS))
+	await vatContract.file(ETH_COLLATERAL_ID, web3.utils.asciiToHex("spot"), decimalValueToHex(FIXED_FEED_PRICE_IN_USD, FIXED_FEED_PRICE_DECIMALS))
 	return ethJoin
 }
 
@@ -122,16 +126,16 @@ async function createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinA
 	await vatContract.hope(daiJoinAddress)
 
 	// Deposit eth into vat
-	await ethJoin.join(account, {value: WEI_TO_DEPOSIT})
+	await ethJoin.join(account, {value: decimalValueToHex(ETH_TO_DEPOSIT, ETH_DECIMALS)})
 
 	console.log("\nBefore Depositing into Vault:")
 	await printBalances(account, vatContract, daiContract)
-	await vatContract.frob(ETH_COLLATERAL_ID, account, account, account, WEI_TO_DEPOSIT, DAI_TO_CREATE)
+	await vatContract.frob(ETH_COLLATERAL_ID, account, account, account, decimalValueToHex(ETH_TO_DEPOSIT, ETH_DECIMALS), decimalValueToHex(DAI_TO_CREATE, DAI_DECIMALS))
 
 	console.log("\nAfter Depositing into Vault:")
 	await printBalances(account, vatContract, daiContract)
 
-	await daiJoinContract.exit(account, DAI_TO_CREATE )
+	await daiJoinContract.exit(account, decimalValueToHex(DAI_TO_CREATE, DAI_DECIMALS) )
 
 	console.log("\nAfter Withdrawing DAI Into ERC20:")
 	await printBalances(account, vatContract, daiContract)
@@ -179,4 +183,8 @@ async function printBalances(account, vatContract, daiContract) {
 	console.log(`VAT ETH   : ${await vatContract.gem(ETH_COLLATERAL_ID, account)}`)
 	console.log(`VAT DAI   : ${await vatContract.dai(account)}`)
 	console.log(`DAI ERC20 : ${await daiContract.balanceOf(account)}`)
+}
+
+function decimalValueToHex(value, decimals) {
+	return '0x' + (value * (10n ** decimals)).toString(16)
 }
