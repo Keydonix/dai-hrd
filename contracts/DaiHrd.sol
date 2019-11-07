@@ -9,6 +9,7 @@ import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IERC1820Registry } from "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import { RuntimeConstants } from "./RuntimeConstants.sol";
+import { Pot } from "./pot.sol";
 
 // ERC777 is inlined because we need to change `_callTokensToSend` to protect against Uniswap replay attacks
 
@@ -27,7 +28,7 @@ import { RuntimeConstants } from "./RuntimeConstants.sol";
  * are no special restrictions in the amount of tokens that created, moved, or
  * destroyed. This makes integration with ERC20 applications seamless.
  */
-contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
+contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
 	using SafeMath for uint256;
 	using Address for address;
 
@@ -487,13 +488,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	}
 }
 
-contract DaiHrd is ERC777 {
-	// uses this super constructor syntax instead of the preferred alternative syntax because my editor doesn't like the class syntax
-	constructor() ERC777("DAI-HRD", "DAI-HRD", new address[](0)) public {
-		dai.approve(address(daiJoin), uint(-1));
-		vat.hope(address(pot));
-	}
-
+contract MakerFunctions {
 	uint constant ONE = 10 ** 27;
 	function rmul(uint x, uint y) internal pure returns (uint z) {
 		z = mul(x, y) / ONE;
@@ -527,7 +522,18 @@ contract DaiHrd is ERC777 {
 		require(y == 0 || (z = x * y) / y == x);
 	}
 
+	function calculatedChi(Pot pot) internal view returns (uint256) {
+		return rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
+	}
+}
 
+
+contract DaiHrd is ERC777, MakerFunctions {
+	// uses this super constructor syntax instead of the preferred alternative syntax because my editor doesn't like the class syntax
+	constructor() ERC777("DAI-HRD", "DAI-HRD", new address[](0)) public {
+		dai.approve(address(daiJoin), uint(-1));
+		vat.hope(address(pot));
+	}
 
 	function deposit(uint256 attodai) external returns(uint256 depositedAttopot) {
 		dai.transferFrom(msg.sender, address(this), attodai);
@@ -543,13 +549,7 @@ contract DaiHrd is ERC777 {
 	}
 
 	function withdraw(uint256 attodaiHrd) external returns(uint256 attodai) {
-		if (pot.rho() != now) pot.drip();
-		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
-		pot.exit(attodaiHrd);
-		daiJoin.exit(address(this), vat.dai(address(this)));
-		attodai = dai.balanceOf(address(this));
-		dai.transfer(msg.sender, attodai);
-		return attodai;
+		return _withdraw(attodaiHrd);
 	}
 
 	function withdrawDuringShutdown(uint256 attodaiHrd) external returns(uint256 attorontodai) {
@@ -562,22 +562,48 @@ contract DaiHrd is ERC777 {
 		return attorontodai;
 	}
 
-	function calculatedChi() public view returns (uint256) {
-		return rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
+	function balanceOfDai(address tokenHolder) external view returns(uint256 attodai) {
+		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 attodaihrd = balanceOf(tokenHolder);
+		attodai = attodaihrd.mul(rontodaiPerPot).div(ONE);
+		return attodai;
 	}
 
-	function balanceOfDai(address tokenHolder) external view returns(uint256 attodai) {
-		uint256 rontodaiPerPot = calculatedChi();
+	function totalSupplyDai() external view returns(uint256 attodai) {
+		uint256 rontodaiPerPot = calculatedChi(pot);
+		attodai = totalSupply().mul(rontodaiPerPot).div(ONE);
+		return attodai;
+	}
 
-		uint256 attodaihrd = balanceOf(tokenHolder);
-		return attodaihrd.mul(ONE).div(rontodaiPerPot);
+	function withdrawDai(uint256 attodai) external returns(uint256 attodaihrd) {
+		if (pot.rho() != now) pot.drip();
+		uint256 rontodaiPerPot = pot.chi();
+		attodaihrd = attodai.mul(ONE).div(rontodaiPerPot) + 1; // Rounded down, add 1. we might send more dai than asked? TODO
+		uint256 attodaiWithdrawn = _withdraw(attodaihrd);
+		require(attodaiWithdrawn > attodai);
+		return attodaihrd;
+	}
+
+	function sendDai(address recipient, uint256 amount, bytes calldata data) external {
+
+	}
+	function burnDai(uint256 amount, bytes calldata data) external {
+
+	}
+	function operatorSendDai(address sender, address recipient, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
+
+	}
+	function operatorBurnDai(address account, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
+
+	}
+
+	function _withdraw(uint256 attodaiHrd) internal returns(uint256 attodai) {
+		if (pot.rho() != now) pot.drip();
+		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
+		pot.exit(attodaiHrd);
+		daiJoin.exit(address(this), vat.dai(address(this)));
+		attodai = dai.balanceOf(address(this));
+		dai.transfer(msg.sender, attodai);
+		return attodai;
 	}
 }
-
-
-
-
-//totalSupplyDai
-//transferDai
-//transferFromDai
-//withdrawDai
