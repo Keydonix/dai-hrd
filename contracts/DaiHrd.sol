@@ -1,13 +1,14 @@
 pragma solidity 0.5.12;
 
-import "@openzeppelin/contracts/GSN/Context.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
-import "./RuntimeConstants.sol";
+import { Context } from "@openzeppelin/contracts/GSN/Context.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC777 } from "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import { IERC777Sender } from "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
+import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { IERC1820Registry } from "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
+import { RuntimeConstants } from "./RuntimeConstants.sol";
 
 // ERC777 is inlined because we need to change `_callTokensToSend` to protect against Uniswap replay attacks
 
@@ -488,7 +489,10 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 
 contract DaiHrd is ERC777 {
 	// uses this super constructor syntax instead of the preferred alternative syntax because my editor doesn't like the class syntax
-	constructor() ERC777("DAI-HRD", "DAI-HRD", new address[](0)) public { }
+	constructor() ERC777("DAI-HRD", "DAI-HRD", new address[](0)) public {
+		dai.approve(address(daiJoin), uint(-1));
+		vat.hope(address(pot));
+	}
 
 	function deposit(uint256 attodai) external returns(uint256 depositedAttopot) {
 		dai.transferFrom(msg.sender, address(this), attodai);
@@ -514,7 +518,7 @@ contract DaiHrd is ERC777 {
 	}
 
 	function withdrawDuringShutdown(uint256 attodaiHrd) external returns(uint256 attorontodai) {
-		require(daiJoin.live() != 1);
+		require(daiJoin.live() != 1, "Can only withdraw VAT DAI during global shutdown.");
 		if (pot.rho() != now) pot.drip();
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
