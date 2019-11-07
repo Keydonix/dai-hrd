@@ -530,8 +530,11 @@ contract MakerFunctions {
 	}
 
 	function updateAndFetchChi(Pot pot) internal returns (uint256 rontodaiPerPot) {
-		if (pot.rho() != now) pot.drip();
-		rontodaiPerPot = pot.chi();
+		if (pot.rho() == now) {
+			rontodaiPerPot = pot.chi();
+		} else {
+			rontodaiPerPot = pot.drip();
+		}
 		return rontodaiPerPot;
 	}
 }
