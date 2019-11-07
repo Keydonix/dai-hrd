@@ -345,6 +345,7 @@ contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
 		emit Transfer(address(0), account, amount);
 	}
 
+	// Note: Keydonix changed visibility from private to internal, we reference this function in derived contract
 	/**
 	 * @dev Send tokens
 	 * @param operator address operator requesting the transfer
@@ -364,7 +365,7 @@ contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
 		bytes memory operatorData,
 		bool requireReceptionAck
 	)
-		private
+		internal // <- modified from private
 	{
 		require(from != address(0), "ERC777: send from the zero address");
 		require(to != address(0), "ERC777: send to the zero address");
@@ -376,6 +377,7 @@ contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
 		_callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
 	}
 
+	// Note: Keydonix changed visibility from private to internal, we reference this function in derived contract
 	/**
 	 * @dev Burn tokens
 	 * @param operator address operator requesting the operation
@@ -391,7 +393,7 @@ contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
 		bytes memory data,
 		bytes memory operatorData
 	)
-		internal
+		internal // <- modified from private
 	{
 		require(from != address(0), "ERC777: burn from the zero address");
 
@@ -522,8 +524,15 @@ contract MakerFunctions {
 		require(y == 0 || (z = x * y) / y == x);
 	}
 
-	function calculatedChi(Pot pot) internal view returns (uint256) {
-		return rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
+	function calculatedChi(Pot pot) internal view returns (uint256 rontodaiPerPot) {
+		rontodaiPerPot = rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
+		return rontodaiPerPot;
+	}
+
+	function updateAndFetchChi(Pot pot) internal returns (uint256 rontodaiPerPot) {
+		if (pot.rho() != now) pot.drip();
+		rontodaiPerPot = pot.chi();
+		return rontodaiPerPot;
 	}
 }
 
@@ -549,6 +558,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	function withdraw(uint256 attodaiHrd) external returns(uint256 attodai) {
+		if (pot.rho() != now) pot.drip();
 		return _withdraw(attodaiHrd);
 	}
 
@@ -562,43 +572,70 @@ contract DaiHrd is ERC777, MakerFunctions {
 		return attorontodai;
 	}
 
+	// Dai specific functions. These functions all behave similar to standard functions
+	// with input or output denominated in Dai instead of DaiHrd
 	function balanceOfDai(address tokenHolder) external view returns(uint256 attodai) {
 		uint256 rontodaiPerPot = calculatedChi(pot);
 		uint256 attodaihrd = balanceOf(tokenHolder);
-		attodai = attodaihrd.mul(rontodaiPerPot).div(ONE);
-		return attodai;
+		return convertAttohrdToAttodai(attodaihrd, rontodaiPerPot);
 	}
 
 	function totalSupplyDai() external view returns(uint256 attodai) {
 		uint256 rontodaiPerPot = calculatedChi(pot);
-		attodai = totalSupply().mul(rontodaiPerPot).div(ONE);
+		attodai = convertAttohrdToAttodai(totalSupply(), rontodaiPerPot);
 		return attodai;
 	}
 
 	function withdrawDai(uint256 attodai) external returns(uint256 attodaihrd) {
-		if (pot.rho() != now) pot.drip();
-		uint256 rontodaiPerPot = pot.chi();
-		attodaihrd = attodai.mul(ONE).div(rontodaiPerPot) + 1; // Rounded down, add 1. we might send more dai than asked? TODO
+		uint256 rontodaiPerPot = updateAndFetchChi(pot);
+		attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
 		uint256 attodaiWithdrawn = _withdraw(attodaihrd);
 		require(attodaiWithdrawn > attodai);
 		return attodaihrd;
 	}
 
-	function sendDai(address recipient, uint256 amount, bytes calldata data) external {
-
-	}
-	function burnDai(uint256 amount, bytes calldata data) external {
-
-	}
-	function operatorSendDai(address sender, address recipient, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
-
-	}
-	function operatorBurnDai(address account, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
-
+	function sendDai(address recipient, uint256 attodai, bytes calldata data) external {
+		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
+		_send(_msgSender(), _msgSender(), recipient, attodaihrd, data, "", true);
 	}
 
+	function burnDai(uint256 attodai, bytes calldata data) external {
+		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
+		_burn(_msgSender(), _msgSender(), attodaihrd, data, "");
+	}
+
+	function operatorSendDai(address sender, address recipient, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
+		require(isOperatorFor(_msgSender(), sender), "ERC777: caller is not an operator for holder");
+
+		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
+		_send(_msgSender(), _msgSender(), recipient, attodaihrd, data, "", true);
+	}
+
+	function operatorBurnDai(address account, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
+		require(isOperatorFor(_msgSender(), account), "ERC777: caller is not an operator for holder");
+
+		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
+		_burn(_msgSender(), _msgSender(), attodaihrd, data, "");
+	}
+
+	// Utility Functions
+	function convertAttodaiToAttohrd(uint256 attodai, uint256 rontodaiPerPot ) internal pure returns (uint256 attodaihrd) {
+		// + 1 is to compensate rounding, since attodaihrd is rounded down
+		attodaihrd = attodai.mul(ONE).div(rontodaiPerPot) + 1;
+		return attodaihrd;
+	}
+
+	function convertAttohrdToAttodai(uint256 attodaihrd, uint256 rontodaiPerPot ) internal pure returns (uint256 attodai) {
+		attodai = attodaihrd.mul(rontodaiPerPot).div(ONE);
+		return attodai;
+	}
+
+	// Internal implementations of functions with multiple entrypoints. drip() should be called prior to this call
 	function _withdraw(uint256 attodaiHrd) internal returns(uint256 attodai) {
-		if (pot.rho() != now) pot.drip();
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
 		daiJoin.exit(address(this), vat.dai(address(this)));
