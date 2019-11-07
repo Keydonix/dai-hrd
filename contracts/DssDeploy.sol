@@ -155,7 +155,7 @@ contract DssDeploy {
     PotFab     public potFab;
     EndFab     public endFab;
     ESMFab     public esmFab;
-//    PauseFab   public pauseFab;
+    // PauseFab   public pauseFab;
 
     Vat     public vat;
     Jug     public jug;
@@ -169,7 +169,7 @@ contract DssDeploy {
     Pot     public pot;
     End     public end;
     ESM     public esm;
-//    DSPause public pause;
+    // DSPause public pause;
 
     mapping(bytes32 => Ilk) public ilks;
 
@@ -196,7 +196,7 @@ contract DssDeploy {
         PotFab potFab_,
         EndFab endFab_,
         ESMFab esmFab_
-//        PauseFab pauseFab_
+        // PauseFab pauseFab_
     ) public {
         vatFab = vatFab_;
         jugFab = jugFab_;
@@ -211,7 +211,7 @@ contract DssDeploy {
         potFab = potFab_;
         endFab = endFab_;
         esmFab = esmFab_;
-//        pauseFab = pauseFab_;
+        // pauseFab = pauseFab_;
     }
 
     function rad(uint wad) internal pure returns (uint) {
@@ -298,30 +298,30 @@ contract DssDeploy {
         end.rely(address(esm));
     }
 
-//    function deployPause(uint delay, DSAuthority authority) public auth {
-//        require(address(dai) != address(0), "Missing previous step");
-//        require(address(end) != address(0), "Missing previous step");
-//
-//        pause = pauseFab.newPause(delay, address(0), authority);
-//
-//        vat.rely(address(pause.proxy()));
-//        cat.rely(address(pause.proxy()));
-//        vow.rely(address(pause.proxy()));
-//        jug.rely(address(pause.proxy()));
-//        pot.rely(address(pause.proxy()));
-//        spotter.rely(address(pause.proxy()));
-//        flap.rely(address(pause.proxy()));
-//        flop.rely(address(pause.proxy()));
-//        end.rely(address(pause.proxy()));
-//
-//        this.setAuthority(authority);
-//        this.setOwner(address(0));
-//    }
+    // function deployPause(uint delay, DSAuthority authority) public auth {
+    //     require(address(dai) != address(0), "Missing previous step");
+    //     require(address(end) != address(0), "Missing previous step");
+
+    //     pause = pauseFab.newPause(delay, address(0), authority);
+
+    //     vat.rely(address(pause.proxy()));
+    //     cat.rely(address(pause.proxy()));
+    //     vow.rely(address(pause.proxy()));
+    //     jug.rely(address(pause.proxy()));
+    //     pot.rely(address(pause.proxy()));
+    //     spotter.rely(address(pause.proxy()));
+    //     flap.rely(address(pause.proxy()));
+    //     flop.rely(address(pause.proxy()));
+    //     end.rely(address(pause.proxy()));
+
+    //     this.setAuthority(authority);
+    //     this.setOwner(address(0));
+    // }
 
     function deployCollateral(bytes32 ilk, address join, address pip) public {
         require(ilk != bytes32(""), "Missing ilk name");
         require(join != address(0), "Missing join address");
-//        require(address(pause) != address(0), "Missing previous step");
+        // require(address(pause) != address(0), "Missing previous step");
 
         // Deploy
         ilks[ilk].flip = flipFab.newFlip(address(vat), ilk);
@@ -339,7 +339,7 @@ contract DssDeploy {
         vat.rely(join);
         ilks[ilk].flip.rely(address(cat));
         ilks[ilk].flip.rely(address(end));
-//        ilks[ilk].flip.rely(address(pause.proxy()));
+        // ilks[ilk].flip.rely(address(pause.proxy()));
     }
 
     function releaseAuth() public {
