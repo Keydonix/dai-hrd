@@ -494,6 +494,41 @@ contract DaiHrd is ERC777 {
 		vat.hope(address(pot));
 	}
 
+	uint constant ONE = 10 ** 27;
+	function rmul(uint x, uint y) internal pure returns (uint z) {
+		z = mul(x, y) / ONE;
+	}
+
+	function rpow(uint x, uint n, uint base) internal pure returns (uint z) {
+		assembly {
+			switch x case 0 {switch n case 0 {z := base} default {z := 0}}
+			default {
+				switch mod(n, 2) case 0 { z := base } default { z := x }
+				let half := div(base, 2)  // for rounding.
+				for { n := div(n, 2) } n { n := div(n,2) } {
+				let xx := mul(x, x)
+				if iszero(eq(div(xx, x), x)) { revert(0,0) }
+				let xxRound := add(xx, half)
+				if lt(xxRound, xx) { revert(0,0) }
+				x := div(xxRound, base)
+				if mod(n,2) {
+					let zx := mul(z, x)
+					if and(iszero(iszero(x)), iszero(eq(div(zx, x), z))) { revert(0,0) }
+					let zxRound := add(zx, half)
+					if lt(zxRound, zx) { revert(0,0) }
+					z := div(zxRound, base)
+				}
+			}
+			}
+		}
+	}
+
+	function mul(uint x, uint y) internal pure returns (uint z) {
+		require(y == 0 || (z = x * y) / y == x);
+	}
+
+
+
 	function deposit(uint256 attodai) external returns(uint256 depositedAttopot) {
 		dai.transferFrom(msg.sender, address(this), attodai);
 		daiJoin.join(address(this), dai.balanceOf(address(this)));
@@ -526,4 +561,23 @@ contract DaiHrd is ERC777 {
 		vat.move(address(this), msg.sender, attorontodai);
 		return attorontodai;
 	}
+
+	function calculatedChi() public view returns (uint256) {
+		return rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
+	}
+
+	function balanceOfDai(address tokenHolder) external view returns(uint256 attodai) {
+		uint256 rontodaiPerPot = calculatedChi();
+
+		uint256 attodaihrd = balanceOf(tokenHolder);
+		return attodaihrd.mul(ONE).div(rontodaiPerPot);
+	}
 }
+
+
+
+
+//totalSupplyDai
+//transferDai
+//transferFromDai
+//withdrawDai
