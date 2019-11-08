@@ -9,7 +9,6 @@ import { SafeMath } from "@openzeppelin/contracts/math/SafeMath.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { IERC1820Registry } from "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import { RuntimeConstants } from "./RuntimeConstants.sol";
-import { Pot } from "./pot.sol";
 
 // ERC777 is inlined because we need to change `_callTokensToSend` to protect against Uniswap replay attacks
 
@@ -564,19 +563,19 @@ contract DaiHrd is ERC777, MakerFunctions {
 
 	// Dai specific functions. These functions all behave similar to standard functions with input or output denominated in Dai instead of DaiHrd
 	function balanceOfDai(address tokenHolder) external view returns(uint256 attodai) {
-		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 rontodaiPerPot = calculatedChi();
 		uint256 attodaihrd = balanceOf(tokenHolder);
 		return convertAttohrdToAttodai(attodaihrd, rontodaiPerPot);
 	}
 
 	function totalSupplyDai() external view returns(uint256 attodai) {
-		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 rontodaiPerPot = calculatedChi();
 		attodai = convertAttohrdToAttodai(totalSupply(), rontodaiPerPot);
 		return attodai;
 	}
 
 	function withdrawDai(uint256 attodai) external returns(uint256 attodaihrd) {
-		uint256 rontodaiPerPot = updateAndFetchChi(pot);
+		uint256 rontodaiPerPot = updateAndFetchChi();
 		attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
 		uint256 attodaiWithdrawn = _withdraw(attodaihrd);
 		require(attodaiWithdrawn > attodai);
@@ -584,13 +583,13 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	function sendDai(address recipient, uint256 attodai, bytes calldata data) external {
-		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 rontodaiPerPot = calculatedChi();
 		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
 		_send(_msgSender(), _msgSender(), recipient, attodaihrd, data, "", true);
 	}
 
 	function burnDai(uint256 attodai, bytes calldata data) external {
-		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 rontodaiPerPot = calculatedChi();
 		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
 		_burn(_msgSender(), _msgSender(), attodaihrd, data, "");
 	}
@@ -598,7 +597,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 	function operatorSendDai(address sender, address recipient, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
 		require(isOperatorFor(_msgSender(), sender), "ERC777: caller is not an operator for holder");
 
-		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 rontodaiPerPot = calculatedChi();
 		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
 		_send(_msgSender(), _msgSender(), recipient, attodaihrd, data, "", true);
 	}
@@ -606,7 +605,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 	function operatorBurnDai(address account, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
 		require(isOperatorFor(_msgSender(), account), "ERC777: caller is not an operator for holder");
 
-		uint256 rontodaiPerPot = calculatedChi(pot);
+		uint256 rontodaiPerPot = calculatedChi();
 		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
 		_burn(_msgSender(), _msgSender(), attodaihrd, data, "");
 	}
@@ -623,12 +622,12 @@ contract DaiHrd is ERC777, MakerFunctions {
 		return attodai;
 	}
 
-	function calculatedChi(Pot pot) internal view returns (uint256 rontodaiPerPot) {
+	function calculatedChi() internal view returns (uint256 rontodaiPerPot) {
 		rontodaiPerPot = rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
 		return rontodaiPerPot;
 	}
 
-	function updateAndFetchChi(Pot pot) internal returns (uint256 rontodaiPerPot) {
+	function updateAndFetchChi() internal returns (uint256 rontodaiPerPot) {
 		if (pot.rho() == now) {
 			rontodaiPerPot = pot.chi();
 		} else {
