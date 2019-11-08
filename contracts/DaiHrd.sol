@@ -365,7 +365,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 		bytes memory operatorData,
 		bool requireReceptionAck
 	)
-		internal // <- modified from private
+		internal // KEYDONIX: modified from private
 	{
 		require(from != address(0), "ERC777: send from the zero address");
 		require(to != address(0), "ERC777: send to the zero address");
@@ -393,7 +393,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 		bytes memory data,
 		bytes memory operatorData
 	)
-		internal // <- modified from private
+		internal // KEYDONIX: modified from private
 	{
 		require(from != address(0), "ERC777: burn from the zero address");
 
