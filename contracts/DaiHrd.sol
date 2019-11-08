@@ -491,14 +491,14 @@ contract DaiHrd is ERC777, MakerFunctions {
 	function deposit(uint256 attodai) external returns(uint256 depositedAttopot) {
 		dai.transferFrom(msg.sender, address(this), attodai);
 		daiJoin.join(address(this), dai.balanceOf(address(this)));
+		return depositVatDaiForAccount(msg.sender);
+	}
 
-		if (pot.rho() != now) pot.drip();
-		uint256 rontodaiPerPot = pot.chi();
-		uint256 attopotToDeposit = vat.dai(address(this)) / rontodaiPerPot;
-
-		pot.join(attopotToDeposit);
-		_mint(address(0), msg.sender, attopotToDeposit, new bytes(0), new bytes(0));
-		return attopotToDeposit;
+	// If the user has vat dai directly (after performing vault actions, for instance), they don't need to create the DAI ERC20 for us to burn it, we'll accept vat dai
+	function depositVatDai(uint256 attoVatDai) external returns(uint256 depositedAttopot) {
+		uint256 attorontodai = attoVatDai.mul(ONE);
+		vat.move(msg.sender, address(this), attorontodai);
+		return depositVatDaiForAccount(msg.sender);
 	}
 
 	function withdraw(uint256 attodaiHrd) external returns(uint256 attodai) {
@@ -593,6 +593,16 @@ contract DaiHrd is ERC777, MakerFunctions {
 			rontodaiPerPot = pot.drip();
 		}
 		return rontodaiPerPot;
+	}
+
+	// Takes whatever vat dai has already been transferred to DaiHrd, gives to pot (DSR) and mints tokens for user
+	function depositVatDaiForAccount(address account) internal returns (uint256 attopotDeposit) {
+		if (pot.rho() != now) pot.drip();
+		uint256 rontodaiPerPot = pot.chi();
+		uint256 attopotToDeposit = vat.dai(address(this)) / rontodaiPerPot;
+		pot.join(attopotToDeposit);
+		_mint(address(0), msg.sender, attopotToDeposit, new bytes(0), new bytes(0));
+		return attopotToDeposit;
 	}
 
 	// Internal implementations of functions with multiple entrypoints. drip() should be called prior to this call
