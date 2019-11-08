@@ -541,19 +541,19 @@ contract DaiHrd is ERC777, MakerFunctions {
 		return attodaihrd;
 	}
 
-	function sendDai(address recipient, uint256 attodai, bytes calldata data) external {
+	function sendDenominatedInDai(address recipient, uint256 attodai, bytes calldata data) external {
 		uint256 rontodaiPerPot = calculatedChi();
 		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
 		_send(_msgSender(), _msgSender(), recipient, attodaihrd, data, "", true);
 	}
 
-	function burnDai(uint256 attodai, bytes calldata data) external {
+	function burnDenominatedInDai(uint256 attodai, bytes calldata data) external {
 		uint256 rontodaiPerPot = calculatedChi();
 		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
 		_burn(_msgSender(), _msgSender(), attodaihrd, data, "");
 	}
 
-	function operatorSendDai(address sender, address recipient, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
+	function operatorSendDenominatedInDai(address sender, address recipient, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
 		require(isOperatorFor(_msgSender(), sender), "ERC777: caller is not an operator for holder");
 
 		uint256 rontodaiPerPot = calculatedChi();
@@ -561,7 +561,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 		_send(_msgSender(), _msgSender(), recipient, attodaihrd, data, "", true);
 	}
 
-	function operatorBurnDai(address account, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
+	function operatorBurnDenominatedInDai(address account, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
 		require(isOperatorFor(_msgSender(), account), "ERC777: caller is not an operator for holder");
 
 		uint256 rontodaiPerPot = calculatedChi();
@@ -588,7 +588,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 
 	function updateAndFetchChi() internal returns (uint256 rontodaiPerPot) {
 		if (pot.rho() == now) {
-			rontodaiPerPot = pot.chi();
+			rontodaiPerPot = pot.chi(); // replace with drop()?? TODO
 		} else {
 			rontodaiPerPot = pot.drip();
 		}
