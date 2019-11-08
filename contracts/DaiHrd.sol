@@ -28,7 +28,7 @@ import { Pot } from "./pot.sol";
  * are no special restrictions in the amount of tokens that created, moved, or
  * destroyed. This makes integration with ERC20 applications seamless.
  */
-contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
+contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	using SafeMath for uint256;
 	using Address for address;
 
@@ -65,7 +65,7 @@ contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
 	// ERC20-allowances
 	mapping (address => mapping (address => uint256)) private _allowances;
 
-	// Protect against Uniswap Exchange reentrancy bug: https://blog.openzeppelin.com/exploiting-uniswap-from-reentrancy-to-actual-profit/
+	// KEYDONIX: Protect against Uniswap Exchange reentrancy bug: https://blog.openzeppelin.com/exploiting-uniswap-from-reentrancy-to-actual-profit/
 	bool uniswapExchangeReentrancyGuard = false;
 
 	/**
@@ -290,6 +290,7 @@ contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
 
 		address spender = _msgSender();
 
+		// KEYDONIX: Block re-entrancy specifically for uniswap, which is vulnerable to ERC-777 tokens
 		if (msg.sender == uniswapExchange) {
 			require(uniswapExchangeReentrancyGuard, "Attempted to execute a Uniswap exchange while in the middle of a Uniswap exchange");
 			uniswapExchangeReentrancyGuard = true;
@@ -345,7 +346,7 @@ contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
 		emit Transfer(address(0), account, amount);
 	}
 
-	// Note: Keydonix changed visibility from private to internal, we reference this function in derived contract
+	// KEYDONIX: changed visibility from private to internal, we reference this function in derived contract
 	/**
 	 * @dev Send tokens
 	 * @param operator address operator requesting the transfer
@@ -377,7 +378,7 @@ contract ERC777 is Context, IERC777, IERC20, RuntimeConstants {
 		_callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
 	}
 
-	// Note: Keydonix changed visibility from private to internal, we reference this function in derived contract
+	// KEYDONIX: changed visibility from private to internal, we reference this function in derived contract
 	/**
 	 * @dev Burn tokens
 	 * @param operator address operator requesting the operation
@@ -523,20 +524,6 @@ contract MakerFunctions {
 	function mul(uint x, uint y) internal pure returns (uint z) {
 		require(y == 0 || (z = x * y) / y == x);
 	}
-
-	function calculatedChi(Pot pot) internal view returns (uint256 rontodaiPerPot) {
-		rontodaiPerPot = rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
-		return rontodaiPerPot;
-	}
-
-	function updateAndFetchChi(Pot pot) internal returns (uint256 rontodaiPerPot) {
-		if (pot.rho() == now) {
-			rontodaiPerPot = pot.chi();
-		} else {
-			rontodaiPerPot = pot.drip();
-		}
-		return rontodaiPerPot;
-	}
 }
 
 
@@ -575,8 +562,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 		return attorontodai;
 	}
 
-	// Dai specific functions. These functions all behave similar to standard functions
-	// with input or output denominated in Dai instead of DaiHrd
+	// Dai specific functions. These functions all behave similar to standard functions with input or output denominated in Dai instead of DaiHrd
 	function balanceOfDai(address tokenHolder) external view returns(uint256 attodai) {
 		uint256 rontodaiPerPot = calculatedChi(pot);
 		uint256 attodaihrd = balanceOf(tokenHolder);
@@ -635,6 +621,20 @@ contract DaiHrd is ERC777, MakerFunctions {
 	function convertAttohrdToAttodai(uint256 attodaihrd, uint256 rontodaiPerPot ) internal pure returns (uint256 attodai) {
 		attodai = attodaihrd.mul(rontodaiPerPot).div(ONE);
 		return attodai;
+	}
+
+	function calculatedChi(Pot pot) internal view returns (uint256 rontodaiPerPot) {
+		rontodaiPerPot = rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
+		return rontodaiPerPot;
+	}
+
+	function updateAndFetchChi(Pot pot) internal returns (uint256 rontodaiPerPot) {
+		if (pot.rho() == now) {
+			rontodaiPerPot = pot.chi();
+		} else {
+			rontodaiPerPot = pot.drip();
+		}
+		return rontodaiPerPot;
 	}
 
 	// Internal implementations of functions with multiple entrypoints. drip() should be called prior to this call
