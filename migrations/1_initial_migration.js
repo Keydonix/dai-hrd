@@ -171,7 +171,7 @@ contract RuntimeConstants {
 
 	// recompile DaiHrd.sol (easiest to just re-compile everything)
 	await WorkflowCompile.compile(config)
-	const DaiHrd = config.resolver.require('DaiHrd')
+	const DaiHrd = artifacts.require('DaiHrd')
 	const daiHrd = await deployer.deploy(DaiHrd)
 	await uniswapFactory.createExchange(daiHrd.address)
 	if (await daiHrd.uniswapExchange() !== await uniswapFactory.getExchange(daiHrd.address)) throw new Error(`daiHrd.uniswapExchange() (${await daiHrd.uniswapExchange()}) !== uniswapFactory.getExchange(daiHrd) (${await uniswapFactory.getExchange(daiHrd.address)})`)

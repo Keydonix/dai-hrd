@@ -335,16 +335,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 * @param requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
 	 */
-	function _send(
-		address operator,
-		address from,
-		address to,
-		uint256 amount,
-		bytes memory userData,
-		bytes memory operatorData,
-		bool requireReceptionAck
-	)
-		internal // KEYDONIX: modified from private
+	function _send(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal
 	{
 		require(from != address(0), "ERC777: send from the zero address");
 		require(to != address(0), "ERC777: send to the zero address");
@@ -365,14 +356,8 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param data bytes extra information provided by the token holder
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 */
-	function _burn(
-		address operator,
-		address from,
-		uint256 amount,
-		bytes memory data,
-		bytes memory operatorData
-	)
-		internal // KEYDONIX: modified from private
+
+	function _burn(address operator, address from, uint256 amount, bytes memory data, bytes memory operatorData) internal
 	{
 		require(from != address(0), "ERC777: burn from the zero address");
 
