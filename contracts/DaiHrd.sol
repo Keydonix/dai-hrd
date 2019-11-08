@@ -523,61 +523,61 @@ contract DaiHrd is ERC777, MakerFunctions {
 	// Dai specific functions. These functions all behave similar to standard functions with input or output denominated in Dai instead of DaiHrd
 	function balanceOfDai(address tokenHolder) external view returns(uint256 attodai) {
 		uint256 rontodaiPerPot = calculatedChi();
-		uint256 attodaihrd = balanceOf(tokenHolder);
-		return convertAttohrdToAttodai(attodaihrd, rontodaiPerPot);
+		uint256 attodaiHrd = balanceOf(tokenHolder);
+		return convertAttodaiHrdToAttodai(attodaiHrd, rontodaiPerPot);
 	}
 
 	function totalSupplyDai() external view returns(uint256 attodai) {
 		uint256 rontodaiPerPot = calculatedChi();
-		attodai = convertAttohrdToAttodai(totalSupply(), rontodaiPerPot);
+		attodai = convertAttodaiHrdToAttodai(totalSupply(), rontodaiPerPot);
 		return attodai;
 	}
 
-	function withdrawDai(uint256 attodai) external returns(uint256 attodaihrd) {
+	function withdrawDai(uint256 attodai) external returns(uint256 attodaiHrd) {
 		uint256 rontodaiPerPot = updateAndFetchChi();
-		attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
-		uint256 attodaiWithdrawn = _withdraw(attodaihrd);
+		attodaiHrd = convertAttodaiToAttodaiHrd(attodai, rontodaiPerPot);
+		uint256 attodaiWithdrawn = _withdraw(attodaiHrd);
 		require(attodaiWithdrawn > attodai);
-		return attodaihrd;
+		return attodaiHrd;
 	}
 
 	function sendDenominatedInDai(address recipient, uint256 attodai, bytes calldata data) external {
 		uint256 rontodaiPerPot = calculatedChi();
-		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
-		_send(_msgSender(), _msgSender(), recipient, attodaihrd, data, "", true);
+		uint256 attodaiHrd = convertAttodaiToAttodaiHrd(attodai, rontodaiPerPot);
+		_send(_msgSender(), _msgSender(), recipient, attodaiHrd, data, "", true);
 	}
 
 	function burnDenominatedInDai(uint256 attodai, bytes calldata data) external {
 		uint256 rontodaiPerPot = calculatedChi();
-		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
-		_burn(_msgSender(), _msgSender(), attodaihrd, data, "");
+		uint256 attodaiHrd = convertAttodaiToAttodaiHrd(attodai, rontodaiPerPot);
+		_burn(_msgSender(), _msgSender(), attodaiHrd, data, "");
 	}
 
 	function operatorSendDenominatedInDai(address sender, address recipient, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
 		require(isOperatorFor(_msgSender(), sender), "ERC777: caller is not an operator for holder");
 
 		uint256 rontodaiPerPot = calculatedChi();
-		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
-		_send(_msgSender(), _msgSender(), recipient, attodaihrd, data, "", true);
+		uint256 attodaiHrd = convertAttodaiToAttodaiHrd(attodai, rontodaiPerPot);
+		_send(_msgSender(), sender, recipient, attodaiHrd, data, operatorData, true);
 	}
 
 	function operatorBurnDenominatedInDai(address account, uint256 attodai, bytes calldata data, bytes calldata operatorData) external {
 		require(isOperatorFor(_msgSender(), account), "ERC777: caller is not an operator for holder");
 
 		uint256 rontodaiPerPot = calculatedChi();
-		uint256 attodaihrd = convertAttodaiToAttohrd(attodai, rontodaiPerPot);
-		_burn(_msgSender(), _msgSender(), attodaihrd, data, "");
+		uint256 attodaiHrd = convertAttodaiToAttodaiHrd(attodai, rontodaiPerPot);
+		_burn(_msgSender(), account, attodaiHrd, data, operatorData);
 	}
 
 	// Utility Functions
-	function convertAttodaiToAttohrd(uint256 attodai, uint256 rontodaiPerPot ) internal pure returns (uint256 attodaihrd) {
-		// + 1 is to compensate rounding, since attodaihrd is rounded down
-		attodaihrd = attodai.mul(ONE).div(rontodaiPerPot) + 1;
-		return attodaihrd;
+	function convertAttodaiToAttodaiHrd(uint256 attodai, uint256 rontodaiPerPot ) internal pure returns (uint256 attodaiHrd) {
+		// + 1 is to compensate rounding, since attodaiHrd is rounded down
+		attodaiHrd = attodai.mul(ONE).div(rontodaiPerPot) + 1;
+		return attodaiHrd;
 	}
 
-	function convertAttohrdToAttodai(uint256 attodaihrd, uint256 rontodaiPerPot ) internal pure returns (uint256 attodai) {
-		attodai = attodaihrd.mul(rontodaiPerPot).div(ONE);
+	function convertAttodaiHrdToAttodai(uint256 attodaiHrd, uint256 rontodaiPerPot ) internal pure returns (uint256 attodai) {
+		attodai = attodaiHrd.mul(rontodaiPerPot).div(ONE);
 		return attodai;
 	}
 
