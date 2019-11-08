@@ -70,11 +70,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	/**
 	 * @dev `defaultOperators` may be an empty array.
 	 */
-	constructor(
-		string memory name,
-		string memory symbol,
-		address[] memory defaultOperators
-	) public {
+	constructor(string memory name, string memory symbol, address[] memory defaultOperators) public {
 		_name = name;
 		_symbol = symbol;
 
@@ -178,10 +174,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	/**
 	 * @dev See {IERC777-isOperatorFor}.
 	 */
-	function isOperatorFor(
-		address operator,
-		address tokenHolder
-	) public view returns (bool) {
+	function isOperatorFor(address operator, address tokenHolder) public view returns (bool) {
 		return operator == tokenHolder ||
 			(_defaultOperators[operator] && !_revokedDefaultOperators[tokenHolder][operator]) ||
 			_operators[tokenHolder][operator];
@@ -229,14 +222,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 *
 	 * Emits {Sent} and {Transfer} events.
 	 */
-	function operatorSend(
-		address sender,
-		address recipient,
-		uint256 amount,
-		bytes calldata data,
-		bytes calldata operatorData
-	)
-	external
+	function operatorSend(address sender, address recipient, uint256 amount, bytes calldata data, bytes calldata operatorData) external
 	{
 		require(isOperatorFor(_msgSender(), sender), "ERC777: caller is not an operator for holder");
 		_send(_msgSender(), sender, recipient, amount, data, operatorData, true);
@@ -323,14 +309,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * - if `account` is a contract, it must implement the {IERC777Recipient}
 	 * interface.
 	 */
-	function _mint(
-		address operator,
-		address account,
-		uint256 amount,
-		bytes memory userData,
-		bytes memory operatorData
-	)
-	internal
+	function _mint(address operator, address account, uint256 amount, bytes memory userData, bytes memory operatorData) internal
 	{
 		require(account != address(0), "ERC777: mint to the zero address");
 
@@ -354,16 +333,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 * @param requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
 	 */
-	function _send(
-		address operator,
-		address from,
-		address to,
-		uint256 amount,
-		bytes memory userData,
-		bytes memory operatorData,
-		bool requireReceptionAck
-	)
-		private
+	function _send(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) private
 	{
 		require(from != address(0), "ERC777: send from the zero address");
 		require(to != address(0), "ERC777: send to the zero address");
@@ -383,14 +353,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param data bytes extra information provided by the token holder
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 */
-	function _burn(
-		address operator,
-		address from,
-		uint256 amount,
-		bytes memory data,
-		bytes memory operatorData
-	)
-		internal
+	function _burn(address operator, address from, uint256 amount, bytes memory data, bytes memory operatorData) internal
 	{
 		require(from != address(0), "ERC777: burn from the zero address");
 
@@ -404,15 +367,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 		emit Transfer(from, address(0), amount);
 	}
 
-	function _move(
-		address operator,
-		address from,
-		address to,
-		uint256 amount,
-		bytes memory userData,
-		bytes memory operatorData
-	)
-		private
+	function _move(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData) private
 	{
 		_balances[from] = _balances[from].sub(amount, "ERC777: transfer amount exceeds balance");
 		_balances[to] = _balances[to].add(amount);
@@ -440,15 +395,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param userData bytes extra information provided by the token holder (if any)
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 */
-	function _callTokensToSend(
-		address operator,
-		address from,
-		address to,
-		uint256 amount,
-		bytes memory userData,
-		bytes memory operatorData
-	)
-		private
+	function _callTokensToSend(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData) private
 	{
 		address implementer = _erc1820.getInterfaceImplementer(from, TOKENS_SENDER_INTERFACE_HASH);
 		if (implementer != address(0)) {
@@ -467,16 +414,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 * @param requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
 	 */
-	function _callTokensReceived(
-		address operator,
-		address from,
-		address to,
-		uint256 amount,
-		bytes memory userData,
-		bytes memory operatorData,
-		bool requireReceptionAck
-	)
-		private
+	function _callTokensReceived(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) private
 	{
 		address implementer = _erc1820.getInterfaceImplementer(to, TOKENS_RECIPIENT_INTERFACE_HASH);
 		if (implementer != address(0)) {
@@ -492,6 +430,7 @@ contract DaiHrd is ERC777 {
 	constructor() ERC777("DAI-HRD", "DAI-HRD", new address[](0)) public {
 		dai.approve(address(daiJoin), uint(-1));
 		vat.hope(address(pot));
+		vat.hope(address(daiJoin));
 	}
 
 	function deposit(uint256 attodai) external returns(uint256 depositedAttopot) {
@@ -511,14 +450,13 @@ contract DaiHrd is ERC777 {
 		if (pot.rho() != now) pot.drip();
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
-		daiJoin.exit(address(this), vat.dai(address(this)));
+		daiJoin.exit(address(this), vat.dai(address(this)) / 10**27);
 		attodai = dai.balanceOf(address(this));
 		dai.transfer(msg.sender, attodai);
 		return attodai;
 	}
 
-	function withdrawDuringShutdown(uint256 attodaiHrd) external returns(uint256 attorontodai) {
-		require(daiJoin.live() != 1, "Can only withdraw VAT DAI during global shutdown.");
+	function withdrawVatDai(uint256 attodaiHrd) external returns(uint256 attorontodai) {
 		if (pot.rho() != now) pot.drip();
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
