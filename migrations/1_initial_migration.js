@@ -37,10 +37,11 @@ module.exports = async function (deployer, network, [account]) {
 	])
 
 	const vatContract = await artifacts.require('Vat').at(vatAddress)
+	const daiContract = await artifacts.require('Dai').at(daiAddress)
 
 	const ethJoin = await deployCollateral(deployer, dssDeploy, vatContract)
 
-	await createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiAddress)
+	await createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiContract)
 
 	// These functions unset the auth of the dssDeploy itself
 	// await dssDeploy.releaseAuth
@@ -117,9 +118,8 @@ async function deployCollateral(deployer, dssDeploy, vatContract) {
 	return ethJoin
 }
 
-async function createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiAddress) {
+async function createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiContract) {
 	const daiJoinContract = await artifacts.require('DaiJoin').at(daiJoinAddress)
-	const daiContract = await artifacts.require('Dai').at(daiAddress)
 
 	// Authorize the daiJoin to modify our vat dai balances
 	await vatContract.hope(daiJoinAddress)
@@ -179,9 +179,9 @@ contract RuntimeConstants {
 }
 
 async function printBalances(account, vatContract, daiContract) {
-	console.log(`VAT ETH   : ${await vatContract.gem(ETH_COLLATERAL_ID, account)}`)
-	console.log(`VAT DAI   : ${await vatContract.dai(account)}`)
-	console.log(`DAI ERC20 : ${await daiContract.balanceOf(account)}`)
+	console.log(`\nVAT ETH   : ${await vatContract.gem(ETH_COLLATERAL_ID, account)}
+VAT DAI   : ${await vatContract.dai(account)}
+DAI ERC20 : ${await daiContract.balanceOf(account)}\n`)
 }
 
 // Needs to handle signed values when we get there
