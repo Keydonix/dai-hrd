@@ -4,6 +4,7 @@ const Dai = artifacts.require('Dai')
 const DaiHrd = artifacts.require('DaiHrd')
 
 const MAX_APPROVAL = bigintToHexString(2n**256n-1n)
+const DUST = 1n * 10n**18n; // Race with balanceOf and deposit
 
 contract('DaiHrd', ([alice, bob]) => {
 	it('balance starts at 0', async () => {
@@ -22,8 +23,8 @@ contract('DaiHrd', ([alice, bob]) => {
 		await dai.approve(daiHrd.address, MAX_APPROVAL)
 		await daiHrd.deposit(await dai.balanceOf(alice))
 
-		expect(bnToBigInt(await daiHrd.balanceOf(alice))).to.equal(80n * 10n**18n)
-		expect(bnToBigInt(await dai.balanceOf(alice))).to.equal(0n)
+		expect(bnToBigInt(await daiHrd.balanceOf(alice)) > (80n * 10n**18n - DUST) ).to.be.true
+		expect(bnToBigInt(await dai.balanceOf(alice)) < DUST ).to.be.true
 	})
 
 	it('can deposit dai and withdraw daiHrd', async () => {
