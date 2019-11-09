@@ -18,12 +18,6 @@ const PIT_BURNER_ADDRESS = '0x0000000000000000000000000000000000000000'
 const FAKE_PRICE_FEED_ADDRESS = '0x0000000000000000000000000000000000000000'
 const MIN_SHUTDOWN_STAKE = 1
 
-const DAI_SAVINGS_RATE = 10n**27n * 100001n / 100000n
-
-function bigintToHexString(input) {
-	return `0x${input.toString(16)}`
-}
-
 module.exports = async function (deployer, network, [account]) {
 	const chainId = await getChainId()
 	await deployer.deploy(artifacts.require('Migrations'))
@@ -42,17 +36,11 @@ module.exports = async function (deployer, network, [account]) {
 		dssDeploy.daiJoin()
 	])
 
-	const potContract = await artifacts.require('Pot').at(potAddress)
 	const vatContract = await artifacts.require('Vat').at(vatAddress)
-	const daiContract = await artifacts.require('Dai').at(daiAddress)
-
-	// Adding these currentl break tests and these 2 tx need to happen in same second, TODO: make a contract
-	// await potContract.drip()
-	// await potContract.methods['file(bytes32,uint256)'](web3.utils.asciiToHex('dsr'), bigintToHexString(DAI_SAVINGS_RATE))
 
 	const ethJoin = await deployCollateral(deployer, dssDeploy, vatContract)
 
-	await createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiContract)
+	await createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiAddress)
 
 	// These functions unset the auth of the dssDeploy itself
 	// await dssDeploy.releaseAuth
@@ -129,8 +117,9 @@ async function deployCollateral(deployer, dssDeploy, vatContract) {
 	return ethJoin
 }
 
-async function createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiContract) {
+async function createVaultAndWithdrawDai(account, vatContract, ethJoin, daiJoinAddress, daiAddress) {
 	const daiJoinContract = await artifacts.require('DaiJoin').at(daiJoinAddress)
+	const daiContract = await artifacts.require('Dai').at(daiAddress)
 
 	// Authorize the daiJoin to modify our vat dai balances
 	await vatContract.hope(daiJoinAddress)

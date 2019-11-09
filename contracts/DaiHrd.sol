@@ -499,6 +499,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	function withdrawVatDai(address recipient, uint256 attodaiHrd) external returns(uint256 attorontodai) {
+		// Don't need rontodaiPerPot, so we don't call updateAndFetchChi
 		if (pot.rho() != now) pot.drip();
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
@@ -570,8 +571,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 
 	// Takes whatever vat dai has already been transferred to DaiHrd, gives to pot (DSR) and mints tokens for user
 	function depositVatDaiForAccount(address account) internal returns (uint256 attopotDeposit) {
-		if (pot.rho() != now) pot.drip();
-		uint256 rontodaiPerPot = pot.chi();
+		uint256 rontodaiPerPot = updateAndFetchChi();
 		uint256 attopotToDeposit = vat.dai(address(this)) / rontodaiPerPot;
 		pot.join(attopotToDeposit);
 		_mint(address(0), msg.sender, attopotToDeposit, new bytes(0), new bytes(0));
