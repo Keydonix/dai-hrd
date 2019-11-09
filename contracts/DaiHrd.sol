@@ -499,12 +499,13 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	function withdrawVatDai(address recipient, uint256 attodaiHrd) external returns(uint256 attorontodai) {
+		require(recipient != address(0) && recipient != address(this), "Invalid recipient");
 		// Don't need rontodaiPerPot, so we don't call updateAndFetchChi
 		if (pot.rho() != now) pot.drip();
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
 		attorontodai = vat.dai(address(this));
-		vat.move(address(this), msg.sender, attorontodai);
+		vat.move(address(this), recipient, attorontodai);
 		return attorontodai;
 	}
 
@@ -574,12 +575,13 @@ contract DaiHrd is ERC777, MakerFunctions {
 		uint256 rontodaiPerPot = updateAndFetchChi();
 		uint256 attopotToDeposit = vat.dai(address(this)) / rontodaiPerPot;
 		pot.join(attopotToDeposit);
-		_mint(address(0), msg.sender, attopotToDeposit, new bytes(0), new bytes(0));
+		_mint(address(0), account, attopotToDeposit, new bytes(0), new bytes(0));
 		return attopotToDeposit;
 	}
 
 	// Internal implementations of functions with multiple entrypoints. drip() should be called prior to this call
 	function _withdraw(address recipient, uint256 attodaiHrd) internal returns(uint256 attodai) {
+		require(recipient != address(0) && recipient != address(this), "Invalid recipient");
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
 		daiJoin.exit(address(this), vat.dai(address(this)) / 10**27);
