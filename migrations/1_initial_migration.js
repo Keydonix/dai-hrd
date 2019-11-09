@@ -18,6 +18,14 @@ const PIT_BURNER_ADDRESS = '0x0000000000000000000000000000000000000000'
 const FAKE_PRICE_FEED_ADDRESS = '0x0000000000000000000000000000000000000000'
 const MIN_SHUTDOWN_STAKE = 1
 
+const MAX_APPROVAL = bigintToHexString(2n**256n-1n)
+
+const DAI_SAVINGS_RATE = 10n**27n * 100001n / 100000n
+
+function bigintToHexString(input) {
+	return `0x${input.toString(16)}`
+}
+
 module.exports = async function (deployer, network, [account]) {
 	const chainId = await getChainId()
 	await deployer.deploy(artifacts.require('Migrations'))
@@ -36,7 +44,12 @@ module.exports = async function (deployer, network, [account]) {
 		dssDeploy.daiJoin()
 	])
 
+	const potContract = await artifacts.require('Pot').at(potAddress)
 	const vatContract = await artifacts.require('Vat').at(vatAddress)
+
+	// following 2 tx need to happen in same second, TODO: make a contract
+	await potContract.drip()
+	await potContract.methods['file(bytes32,uint256)'](web3.utils.asciiToHex('dsr'), bigintToHexString(DAI_SAVINGS_RATE))
 
 	const ethJoin = await deployCollateral(deployer, dssDeploy, vatContract)
 

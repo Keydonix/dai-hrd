@@ -257,6 +257,8 @@ contract DssDeploy {
         vat.rely(address(pot));
         flap.rely(address(vow));
         flop.rely(address(vow));
+
+		pot.rely(msg.sender); // KEYDONIX added
     }
 
     function deployLiquidator() public {
