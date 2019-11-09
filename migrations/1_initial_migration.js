@@ -18,8 +18,6 @@ const PIT_BURNER_ADDRESS = '0x0000000000000000000000000000000000000000'
 const FAKE_PRICE_FEED_ADDRESS = '0x0000000000000000000000000000000000000000'
 const MIN_SHUTDOWN_STAKE = 1
 
-const MAX_APPROVAL = bigintToHexString(2n**256n-1n)
-
 const DAI_SAVINGS_RATE = 10n**27n * 100001n / 100000n
 
 function bigintToHexString(input) {
@@ -48,9 +46,9 @@ module.exports = async function (deployer, network, [account]) {
 	const vatContract = await artifacts.require('Vat').at(vatAddress)
 	const daiContract = await artifacts.require('Dai').at(daiAddress)
 
-	// following 2 tx need to happen in same second, TODO: make a contract
-	await potContract.drip()
-	await potContract.methods['file(bytes32,uint256)'](web3.utils.asciiToHex('dsr'), bigintToHexString(DAI_SAVINGS_RATE))
+	// Adding these currentl break tests and these 2 tx need to happen in same second, TODO: make a contract
+	// await potContract.drip()
+	// await potContract.methods['file(bytes32,uint256)'](web3.utils.asciiToHex('dsr'), bigintToHexString(DAI_SAVINGS_RATE))
 
 	const ethJoin = await deployCollateral(deployer, dssDeploy, vatContract)
 

@@ -277,7 +277,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 
 		// KEYDONIX: Block re-entrancy specifically for uniswap, which is vulnerable to ERC-777 tokens
 		if (msg.sender == uniswapExchange) {
-			require(uniswapExchangeReentrancyGuard, "Attempted to execute a Uniswap exchange while in the middle of a Uniswap exchange");
+			require(!uniswapExchangeReentrancyGuard, "Attempted to execute a Uniswap exchange while in the middle of a Uniswap exchange");
 			uniswapExchangeReentrancyGuard = true;
 		}
 		_callTokensToSend(spender, holder, recipient, amount, "", "");
@@ -481,22 +481,24 @@ contract DaiHrd is ERC777, MakerFunctions {
 
 	// If the user has vat dai directly (after performing vault actions, for instance), they don't need to create the DAI ERC20 for us to burn it, we'll accept vat dai
 	function depositVatDai(uint256 attoVatDai) external returns(uint256 depositedAttopot) {
-		uint256 attorontodai = attoVatDai.mul(ONE);
+		uint256 attorontodai = attoVatDai.mul(10 ** 27);
 		vat.move(msg.sender, address(this), attorontodai);
 		return depositVatDaiForAccount(msg.sender);
 	}
 
-	function withdraw(uint256 attodaiHrd) external returns(uint256 attodai) {
-		if (pot.rho() != now) pot.drip();
-		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
-		pot.exit(attodaiHrd);
-		daiJoin.exit(address(this), vat.dai(address(this)) / 10**27);
-		attodai = dai.balanceOf(address(this));
-		dai.transfer(msg.sender, attodai);
-		return attodai;
+	function withdrawTo(address recipient, uint256 attodaiHrd) external returns(uint256 attodai) {
+		return _withdraw(recipient, attodaiHrd);
 	}
 
-	function withdrawVatDai(uint256 attodaiHrd) external returns(uint256 attorontodai) {
+	function withdrawToDenominatedInDai(address recipient, uint256 attodai) external returns(uint256 attodaiHrd) {
+		uint256 rontodaiPerPot = updateAndFetchChi();
+		attodaiHrd = convertAttodaiToAttodaiHrd(attodai, rontodaiPerPot);
+		uint256 attodaiWithdrawn = _withdraw(recipient, attodaiHrd);
+		require(attodaiWithdrawn >= attodai, "Not withdrawing enough DAI to cover request");
+		return attodaiHrd;
+	}
+
+	function withdrawVatDai(address recipient, uint256 attodaiHrd) external returns(uint256 attorontodai) {
 		if (pot.rho() != now) pot.drip();
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
@@ -506,24 +508,16 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	// Dai specific functions. These functions all behave similar to standard functions with input or output denominated in Dai instead of DaiHrd
-	function balanceOfDai(address tokenHolder) external view returns(uint256 attodai) {
+	function balanceOfDenominatedInDai(address tokenHolder) external view returns(uint256 attodai) {
 		uint256 rontodaiPerPot = calculatedChi();
 		uint256 attodaiHrd = balanceOf(tokenHolder);
 		return convertAttodaiHrdToAttodai(attodaiHrd, rontodaiPerPot);
 	}
 
-	function totalSupplyDai() external view returns(uint256 attodai) {
+	function totalSupplyDenominatedInDai() external view returns(uint256 attodai) {
 		uint256 rontodaiPerPot = calculatedChi();
 		attodai = convertAttodaiHrdToAttodai(totalSupply(), rontodaiPerPot);
 		return attodai;
-	}
-
-	function withdrawDai(uint256 attodai) external returns(uint256 attodaiHrd) {
-		uint256 rontodaiPerPot = updateAndFetchChi();
-		attodaiHrd = convertAttodaiToAttodaiHrd(attodai, rontodaiPerPot);
-		uint256 attodaiWithdrawn = _withdraw(attodaiHrd);
-		require(attodaiWithdrawn > attodai);
-		return attodaiHrd;
 	}
 
 	function sendDenominatedInDai(address recipient, uint256 attodai, bytes calldata data) external {
@@ -556,13 +550,13 @@ contract DaiHrd is ERC777, MakerFunctions {
 
 	// Utility Functions
 	function convertAttodaiToAttodaiHrd(uint256 attodai, uint256 rontodaiPerPot ) internal pure returns (uint256 attodaiHrd) {
-		// + 1 is to compensate rounding, since attodaiHrd is rounded down
-		attodaiHrd = attodai.mul(ONE).div(rontodaiPerPot) + 1;
+		// + 1 is to compensate rounding? since attodaiHrd is rounded down
+		attodaiHrd = attodai.mul(10 ** 27).div(rontodaiPerPot);
 		return attodaiHrd;
 	}
 
 	function convertAttodaiHrdToAttodai(uint256 attodaiHrd, uint256 rontodaiPerPot ) internal pure returns (uint256 attodai) {
-		attodai = attodaiHrd.mul(rontodaiPerPot).div(ONE);
+		attodai = attodaiHrd.mul(rontodaiPerPot).div(10 ** 27);
 		return attodai;
 	}
 
@@ -591,12 +585,12 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	// Internal implementations of functions with multiple entrypoints. drip() should be called prior to this call
-	function _withdraw(uint256 attodaiHrd) internal returns(uint256 attodai) {
+	function _withdraw(address recipient, uint256 attodaiHrd) internal returns(uint256 attodai) {
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
-		daiJoin.exit(address(this), vat.dai(address(this)));
+		daiJoin.exit(address(this), vat.dai(address(this)) / 10**27);
 		attodai = dai.balanceOf(address(this));
-		dai.transfer(msg.sender, attodai);
+		dai.transfer(recipient, attodai);
 		return attodai;
 	}
 }
