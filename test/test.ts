@@ -33,7 +33,19 @@ contract('DaiHrd', ([alice, bob]) => {
 
 		await dai.approve(daiHrd.address, MAX_APPROVAL)
 		await daiHrd.deposit(await dai.balanceOf(alice))
-		await daiHrd.withdraw(await daiHrd.balanceOf(alice))
+		await daiHrd.withdrawTo(alice, await daiHrd.balanceOf(alice))
+
+		expect(bnToBigInt(await dai.balanceOf(alice))).to.equal(80n * 10n**18n)
+		expect(bnToBigInt(await daiHrd.balanceOf(alice))).to.equal(0n)
+	})
+
+	it('can deposit dai and withdraw daiHrd denominated in dai', async () => {
+		const daiHrd = await DaiHrd.deployed()
+		const dai = await Dai.at(await daiHrd.dai())
+
+		await dai.approve(daiHrd.address, MAX_APPROVAL)
+		await daiHrd.deposit(await dai.balanceOf(alice))
+		await daiHrd.withdrawToDenominatedInDai(alice, await daiHrd.balanceOfDenominatedInDai(alice))
 
 		expect(bnToBigInt(await dai.balanceOf(alice))).to.equal(80n * 10n**18n)
 		expect(bnToBigInt(await daiHrd.balanceOf(alice))).to.equal(0n)
