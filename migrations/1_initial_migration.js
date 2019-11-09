@@ -179,9 +179,9 @@ contract RuntimeConstants {
 }
 
 async function printBalances(account, vatContract, daiContract) {
-	console.log(`VAT ETH   : ${await vatContract.gem(ETH_COLLATERAL_ID, account)}`)
-	console.log(`VAT DAI   : ${await vatContract.dai(account)}`)
-	console.log(`DAI ERC20 : ${await daiContract.balanceOf(account)}`)
+	console.log(`\nVAT ETH   : ${await vatContract.gem(ETH_COLLATERAL_ID, account)}
+VAT DAI   : ${await vatContract.dai(account)}
+DAI ERC20 : ${await daiContract.balanceOf(account)}\n`)
 }
 
 // Needs to handle signed values when we get there
