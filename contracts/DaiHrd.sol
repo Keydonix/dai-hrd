@@ -516,8 +516,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 
 	function totalSupplyDenominatedInDai() external view returns(uint256 attodai) {
 		uint256 rontodaiPerPot = calculatedChi();
-		attodai = convertAttodaiHrdToAttodai(totalSupply(), rontodaiPerPot);
-		return attodai;
+		return convertAttodaiHrdToAttodai(totalSupply(), rontodaiPerPot);
 	}
 
 	function sendDenominatedInDai(address recipient, uint256 attodai, bytes calldata data) external {
@@ -551,27 +550,22 @@ contract DaiHrd is ERC777, MakerFunctions {
 	// Utility Functions
 	function convertAttodaiToAttodaiHrd(uint256 attodai, uint256 rontodaiPerPot ) internal pure returns (uint256 attodaiHrd) {
 		// + 1 is to compensate rounding? since attodaiHrd is rounded down
-		attodaiHrd = attodai.mul(10 ** 27).div(rontodaiPerPot);
-		return attodaiHrd;
+		return attodai.mul(10 ** 27).div(rontodaiPerPot);
 	}
 
 	function convertAttodaiHrdToAttodai(uint256 attodaiHrd, uint256 rontodaiPerPot ) internal pure returns (uint256 attodai) {
-		attodai = attodaiHrd.mul(rontodaiPerPot).div(10 ** 27);
-		return attodai;
+		return attodaiHrd.mul(rontodaiPerPot).div(10 ** 27);
 	}
 
-	function calculatedChi() internal view returns (uint256 rontodaiPerPot) {
-		rontodaiPerPot = rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
-		return rontodaiPerPot;
+	function calculatedChi() public view returns (uint256 rontodaiPerPot) {
+		return rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
 	}
 
 	function updateAndFetchChi() internal returns (uint256 rontodaiPerPot) {
 		if (pot.rho() == now) {
-			rontodaiPerPot = pot.chi(); // replace with drop()?? TODO
-		} else {
-			rontodaiPerPot = pot.drip();
+			return pot.chi(); // replace with drop()?? TODO
 		}
-		return rontodaiPerPot;
+		return pot.drip();
 	}
 
 	// Takes whatever vat dai has already been transferred to DaiHrd, gives to pot (DSR) and mints tokens for user
