@@ -1,4 +1,5 @@
 **/node_modules/
-/build/
-/types/
+/build-cache/
+/generated/
 /contracts/RuntimeConstants.sol
+/test/db/

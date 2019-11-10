@@ -22,7 +22,7 @@ contract VatLike {
 }
 
 contract PipLike {
-    function peek() external returns (bytes32, bool);
+    function peek() external returns (bytes32 a, bool b);
 }
 
 contract Spotter is LibNote {
