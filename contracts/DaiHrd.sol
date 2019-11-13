@@ -431,8 +431,9 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 
 contract MakerFunctions {
 	uint constant ONE = 10 ** 27;
-	function rmul(uint x, uint y) internal pure returns (uint z) {
-		z = mul(x, y) / ONE;
+	// KEYDONIX: Renamed from `rmul` for clarity
+	function safeMul27(uint x, uint y) internal pure returns (uint z) {
+		z = safeMul(x, y) / ONE;
 	}
 
 	function rpow(uint x, uint n, uint base) internal pure returns (uint z) {
@@ -459,7 +460,8 @@ contract MakerFunctions {
 		}
 	}
 
-	function mul(uint x, uint y) internal pure returns (uint z) {
+	// KEYDONIX: Renamed from `mul` due to shadowing warning from Solidity
+	function safeMul(uint x, uint y) internal pure returns (uint z) {
 		require(y == 0 || (z = x * y) / y == x);
 	}
 }
@@ -560,7 +562,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	function calculatedChi() public view returns (uint256 rontodaiPerPot) {
-		return rmul(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
+		return safeMul27(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
 	}
 
 	function updateAndFetchChi() internal returns (uint256 rontodaiPerPot) {

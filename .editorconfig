@@ -10,3 +10,7 @@ trim_trailing_whitespace = true
 [*.yml]
 indent_style = space
 indent_size = 2
+
+[contracts/{cat,dai,end,flap,flip,flop,join,jug,lib,pot,spot,vat,vow}.sol]
+indent_size = 4
+indent_style = space

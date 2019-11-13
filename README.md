@@ -5,20 +5,24 @@ DAI: Hodl Rated DAI  -  A DAI token wrapper that benefits from the Dai Savings R
 
 ## Setup
 ```
-npm install
-git update-index --assume-unchanged .\build\contracts\UniswapExchangeTemplate.json .\build\contracts\UniswapFactory.json .\contracts\RuntimeConstants.sol
-```
-## Build
-```
-npm run build
-```
-## Run
-Run once and leave running to get ganache development server up and running.
-```
-npm run start-ganache
+npm install --ignore-scripts
 ```
 
-Run when you want to deploy latest contracts.
+## Compile the Contracts
 ```
+npm run compile
+```
+A `build-cache` folder will be created in the root directory that contains both the solc input JSON and the output JSON.  A `generated` folder will also be created in the root directory that contains TypeScript interfaces to the contracts.
+
+## Deploy to Ganache
+```
+npm run compile
+npm run start-ganache
 npm run deploy
+```
+
+## Test against Ganache
+```
+npm run compile
+npm run test
 ```

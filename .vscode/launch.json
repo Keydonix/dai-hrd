@@ -1,0 +1,37 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "test",
+			"runtimeArgs": [ "-r", "ts-node/register" ],
+			"args": [ "${workspaceFolder}/test/test.ts" ],
+			"outputCapture": "std",
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "deploy",
+			"runtimeArgs": [ "-r", "ts-node/register" ],
+			"args": [ "${workspaceFolder}/scripts/deploy/index.ts" ],
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "compile",
+			"runtimeArgs": [ "-r", "ts-node/register" ],
+			"args": [ "${workspaceFolder}/scripts/compile/index.ts" ],
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "clean",
+			"runtimeArgs": [ "-r", "ts-node/register" ],
+			"args": [ "${workspaceFolder}/scripts/clean.ts" ],
+		},
+	]
+}

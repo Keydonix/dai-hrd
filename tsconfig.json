@@ -5,14 +5,17 @@
 		"moduleResolution": "node",
 		"noEmit": true,
 		"strict": true,
-		// everything is terrible: truffle doesn't actually run .ts tests as TS, it just runs them as JS, which means no type signatures!
-		"noImplicitAny": false,
-		"esModuleInterop": true,
-		"lib": ["es2019", "esnext.bigint"],
-		"types": ["truffle-typings"]
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"lib": ["es2019", "esnext.bigint", "dom"],
+		"typeRoots": [ "./node_modules/@types", "./typings" ]
 	},
 	"include": [
 		"test/**/*.ts",
-		"types/**/*.ts",
+		"scripts/**/*.ts",
+		"generated/**/*.ts",
+		"typings/**/*.d.ts",
 	],
 }
