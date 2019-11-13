@@ -5,7 +5,7 @@ pragma solidity 0.5.12;
 import "./pot.sol";
 
 contract SetDsr {
-    // --- Auth ---
+    // --- Store reference to DSR contract (pot) ---
 	Pot public pot;
 
     // --- Init ---
