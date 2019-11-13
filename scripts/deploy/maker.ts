@@ -1,6 +1,7 @@
 import { JsonRpc } from '@zoltu/ethereum-types'
 import { DssDeploy, DSToken, Vat, Dai, Pot, DaiJoin, ETHJoin, Dependencies } from '../../generated/maker'
-import { deployContract, stringLiteralToBigint, xToAttorontox, xToRontox, ethToAttoeth, daiToAttodai } from './helpers'
+import { deployContract } from './helpers'
+import { stringLiteralToBigint, xToAttorontox, xToRontox, ethToAttoeth, daiToAttodai } from '../libraries/type-helpers'
 
 const PIT_BURNER_ADDRESS = 0n
 const FAKE_PRICE_FEED_ADDRESS = 0n
