@@ -1,5 +1,5 @@
 import { JsonRpc } from '@zoltu/ethereum-types'
-import { DssDeploy, DSToken, Vat, Dai, Pot, DaiJoin, ETHJoin, Dependencies } from '../../generated/maker'
+import { DssDeploy, DSToken, Vat, Dai, Pot, DaiJoin, ETHJoin, SetDsr, Dependencies } from '../../generated/maker'
 import { deployContract } from './helpers'
 import { stringLiteralToBigint, xToAttorontox, xToRontox, ethToAttoeth, daiToAttodai } from '../libraries/type-helpers'
 
@@ -44,6 +44,9 @@ export async function deployMaker(rpc: JsonRpc, dependencies: Dependencies) {
 	const pot = new Pot(dependencies, await dssDeploy.pot_())
 	const daiJoin = new DaiJoin(dependencies, await dssDeploy.daiJoin_())
 
+	const setDsr = new SetDsr(dependencies, await deploy('SetDsr.sol', 'SetDsr', pot.address))
+	await pot.rely(setDsr.address)
+
 	// deploy collateral
 	const ethJoin = new ETHJoin(dependencies, await deploy('join.sol', 'ETHJoin', vat.address, ETH_COLLATERAL_ID))
 	await dssDeploy.deployCollateral(ETH_COLLATERAL_ID, ethJoin.address, FAKE_PRICE_FEED_ADDRESS)
@@ -51,7 +54,7 @@ export async function deployMaker(rpc: JsonRpc, dependencies: Dependencies) {
 	await vat.file2(stringLiteralToBigint('Line'), xToAttorontox(DAI_DEBT_CEILING))
 	await vat.file(ETH_COLLATERAL_ID, stringLiteralToBigint('spot'), xToRontox(FIXED_FEED_PRICE_IN_USD))
 
-	return { dai, vat, pot, daiJoin, ethJoin }
+	return { dai, vat, pot, daiJoin, ethJoin, setDsr }
 }
 
 export async function seedMaker(account: bigint, vat: Vat, daiJoin: DaiJoin, ethJoin: ETHJoin) {

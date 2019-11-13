@@ -6,6 +6,8 @@ import { encodeMethod } from '@zoltu/ethereum-abi-encoder';
 import { keccak256 } from '@zoltu/ethereum-crypto';
 import { duplicateActor, Actor, testDeploy, getGanacheControls, GanacheControls, startGanache } from './helpers';
 import { MnemonicSigner } from '../scripts/libraries/mnemonic-signer';
+import { xToRontox } from "../scripts/libraries/type-helpers";
+// import { sleep } from "@zoltu/ethereum-fetch-json-rpc/output-node/sleep";
 
 const MAX_APPROVAL = 2n**256n-1n
 
@@ -47,6 +49,14 @@ describe('DaiHrd', () => {
 		}
 	})
 
+	it('can set DSR', async () => {
+		expect(await alice.pot.dsr_()).toEqual(10n**27n)
+		const newDsr = xToRontox(1.000001);
+		await alice.setDsr.setDsr(newDsr)
+		expect(await alice.pot.dsr_()).toEqual(newDsr)
+	})
+
+
 	it('balance starts at 0', async () => {
 		const aliceBalance = await alice.daiHrd.balanceOf_(alice.address)
 		const bobBalance = await bob.daiHrd.balanceOf_(bob.address)
@@ -74,7 +84,6 @@ describe('DaiHrd', () => {
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(80n * 10n**18n)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
 	})
-
 	it('can deposit dai and withdraw daiHrd denominated in dai', async () => {
 		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
 		await alice.daiHrd.deposit(await alice.dai.balanceOf_(alice.address))

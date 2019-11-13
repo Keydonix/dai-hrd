@@ -22,7 +22,7 @@ export async function deploy(rpc: JsonRpc, dependencies: Dependencies) {
 	const uniswapFactory = await deployUniswap(rpc, dependencies)
 
 	console.log('deploying Maker...')
-	const { dai, vat, pot, daiJoin, ethJoin } = await deployMaker(rpc, dependencies)
+	const { dai, vat, pot, daiJoin, ethJoin, setDsr } = await deployMaker(rpc, dependencies)
 
 	// we recompile DaiHrd because we now have the appropriate addreses to inject, we didn't on the first pass
 	console.log('recompiling DaiHrd...')
@@ -36,7 +36,7 @@ export async function deploy(rpc: JsonRpc, dependencies: Dependencies) {
 
 	console.log('deployment complete')
 
-	return { uniswapFactory, dai, vat, pot, daiJoin, ethJoin, daiHrd }
+	return { uniswapFactory, dai, vat, pot, daiJoin, ethJoin, daiHrd, setDsr }
 }
 
 async function deployToLocalhost() {
