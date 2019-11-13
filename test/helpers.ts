@@ -3,7 +3,7 @@ import fetch from 'node-fetch'
 import * as ganache from 'ganache-core'
 import { FetchJsonRpc } from '@zoltu/ethereum-fetch-json-rpc'
 import { MnemonicSigner } from '../scripts/libraries/mnemonic-signer'
-import { Dai, Vat, Pot, DaiJoin, ETHJoin } from '../generated/maker'
+import { Dai, Vat, Pot, DaiJoin, ETHJoin, SetDsr } from '../generated/maker'
 import { DaiHrd } from '../generated/dai-hrd'
 import { Factory as UniswapFactory } from '../generated/uniswap'
 import { deploy } from '../scripts/deploy'
@@ -26,6 +26,7 @@ export interface Actor {
 	daiJoin: DaiJoin
 	ethJoin: ETHJoin
 	daiHrd: DaiHrd
+	setDsr: SetDsr
 }
 
 export interface GanacheControls {
@@ -50,6 +51,7 @@ export async function duplicateActor(sourceActor: Actor, signer: MnemonicSigner 
 		daiJoin: new DaiJoin(dependencies, sourceActor.daiJoin.address),
 		ethJoin: new ETHJoin(dependencies, sourceActor.ethJoin.address),
 		daiHrd: new DaiHrd(dependencies, sourceActor.daiHrd.address),
+		setDsr: new SetDsr(dependencies, sourceActor.setDsr.address),
 	}
 }
 
@@ -104,7 +106,7 @@ export function getGanacheControls(rpc: JsonRpc): GanacheControls {
 async function tryReadAddresses(dependencies: TestDependencies) {
 	if (!await fileExists(testAddressesPath)) return undefined
 	const json = await fs.readFile(testAddressesPath, 'utf8')
-	const { uniswapFactory, dai, vat, pot, daiJoin, ethJoin, daiHrd } = JSON.parse(json, (_, value) => typeof value === 'string' ? BigInt(value) : value) as Record<'uniswapFactory' |'dai' |'vat' |'pot' |'daiJoin' |'ethJoin' |'daiHrd', bigint>
+	const { uniswapFactory, dai, vat, pot, daiJoin, ethJoin, daiHrd, setDsr } = JSON.parse(json, (_, value) => typeof value === 'string' ? BigInt(value) : value) as Record<'uniswapFactory' |'dai' |'vat' |'pot' |'daiJoin' |'ethJoin' |'daiHrd'|'setDsr', bigint>
 	return {
 		uniswapFactory: new UniswapFactory(dependencies, uniswapFactory),
 		dai: new Dai(dependencies, dai),
@@ -113,6 +115,7 @@ async function tryReadAddresses(dependencies: TestDependencies) {
 		daiJoin: new DaiJoin(dependencies, daiJoin),
 		ethJoin: new ETHJoin(dependencies, ethJoin),
 		daiHrd: new DaiHrd(dependencies, daiHrd),
+		setDsr: new SetDsr(dependencies, setDsr),
 	}
 }
 

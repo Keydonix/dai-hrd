@@ -46,4 +46,5 @@ const explicitGasPrices: Record<string, bigint> = {
 	'deposit(uint256)': 292000n,
 	'withdrawVatDai(address,uint256)': 180000n,
 	'withdrawToDenominatedInDai(address,uint256)': 263000n,
+	'setDsr(uint256)': 263000n,
 }
