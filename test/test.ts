@@ -8,7 +8,7 @@ globalThis.crypto = new Crypto()
 
 import { encodeMethod } from '@zoltu/ethereum-abi-encoder';
 import { keccak256 } from '@zoltu/ethereum-crypto';
-import { testDeploy, getGanacheControls, GanacheControls, startGanacheIfNecessary } from './helpers';
+import { testDeploy, getGanacheControls, GanacheControls, startGanacheIfNecessary, mineBlock } from './helpers';
 import { MnemonicSigner } from '../scripts/libraries/mnemonic-signer';
 import { xToRontox, daiToAttodai } from '../scripts/libraries/type-helpers';
 import { Actor, duplicateActor } from '../scripts/libraries/actor';
@@ -63,6 +63,46 @@ describe('DaiHrd', () => {
 		await alice.setDsr.setDsr(newDsr)
 		expect(await alice.pot.dsr_()).toEqual(newDsr)
 	})
+
+	it('can set DSR, deposit, and withdraw', async () => {
+		const DSR_RATE = 1.000001
+
+		const attodaiToDeposit = daiToAttodai(10_000n)
+		await generateDai(alice, attodaiToDeposit)
+
+		await mineBlock(alice)
+		expect(await alice.pot.dsr_()).toEqual(10n**27n)
+		const newDsr = xToRontox(DSR_RATE)
+		await alice.setDsr.setDsr(newDsr)
+		expect(await alice.pot.dsr_()).toEqual(newDsr)
+
+		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
+		const chiBeforeDeposit = await alice.daiHrd.calculatedChi_()
+		await ganache.advanceTime(2)
+
+		await alice.daiHrd.deposit(attodaiToDeposit)
+		await ganache.advanceTime(2)
+
+		await mineBlock(alice)
+		const chiAfterDeposit = await alice.daiHrd.calculatedChi_()
+		await ganache.advanceTime(14)
+		await alice.daiHrd.withdrawTo(alice.address, await alice.daiHrd.balanceOf_(alice.address))
+		await mineBlock(alice)
+		const chiAfterWithdraw = await alice.daiHrd.calculatedChi_()
+
+		const lowerBoundChiDelta = chiAfterWithdraw - chiAfterDeposit
+		const upperBoundChiDelta = chiAfterWithdraw - chiBeforeDeposit
+
+		const lowerBalanceAttodai = attodaiToDeposit + lowerBoundChiDelta * attodaiToDeposit / 10n**27n
+		const upperBalanceAttodai = attodaiToDeposit + upperBoundChiDelta * attodaiToDeposit / 10n**27n
+
+		const newBalanceAttodai = await alice.dai.balanceOf_(alice.address)
+
+		expect(newBalanceAttodai >= lowerBalanceAttodai).toBeTruthy('Not enough DAI paid from DSR')
+		expect(newBalanceAttodai <= upperBalanceAttodai).toBeTruthy('Too much DAI paid from DSR')
+		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
+	})
+
 
 	it('balance starts at 0', async () => {
 		const aliceBalance = await alice.daiHrd.balanceOf_(alice.address)

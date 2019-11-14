@@ -489,6 +489,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	function withdrawTo(address recipient, uint256 attodaiHrd) external returns(uint256 attodai) {
+		pot.drip();
 		return _withdraw(recipient, attodaiHrd);
 	}
 
