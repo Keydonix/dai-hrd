@@ -43,8 +43,8 @@ function getGasLimit(methodSignature: string): {gasLimit?: bigint} {
 }
 
 const explicitGasPrices: Record<string, bigint> = {
-	'deposit(uint256)': 292000n,
-	'withdrawVatDai(address,uint256)': 180000n,
-	'withdrawToDenominatedInDai(address,uint256)': 263000n,
-	'setDsr(uint256)': 263000n,
+	'deposit(uint256)': 300000n,
+	'withdrawVatDai(address,uint256)': 200000n,
+	'withdrawToDenominatedInDai(address,uint256)': 300000n,
+	'setDsr(uint256)': 300000n,
 }

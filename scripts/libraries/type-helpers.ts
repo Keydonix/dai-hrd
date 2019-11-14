@@ -6,6 +6,36 @@ export function stringLiteralToBigint(literal: string): bigint {
 	return Bytes.fromByteArray([...literalBytes, ...new Uint8Array(32 - literalBytes.length)]).toUnsignedBigint()
 }
 
+export function bigintAttoToDecimalString(value: bigint): string {
+	const integerPart = value / 10n**18n
+	const fractionalPart = value % 10n**18n
+	if (fractionalPart === 0n) {
+		return integerPart.toString(10)
+	} else {
+		return `${integerPart.toString(10)}.${fractionalPart.toString(10).padStart(18, '0')}`
+	}
+}
+
+export function bigintRontoToDecimalString(value: bigint): string {
+	const integerPart = value / 10n**27n
+	const fractionalPart = value % 10n**27n
+	if (fractionalPart === 0n) {
+		return integerPart.toString(10)
+	} else {
+		return `${integerPart.toString(10)}.${fractionalPart.toString(10).padStart(27, '0')}`
+	}
+}
+
+export function bigintAttorontoToDecimalString(value: bigint): string {
+	const integerPart = value / 10n**45n
+	const fractionalPart = value % 10n**45n
+	if (fractionalPart === 0n) {
+		return integerPart.toString(10)
+	} else {
+		return `${integerPart.toString(10)}.${fractionalPart.toString(10).padStart(45, '0')}`
+	}
+}
+
 export const attoethToEth = (attoeth: bigint) => Number(attoeth) / 10**18
 export const ethToAttoeth = (eth: number | bigint) => typeof eth === 'bigint' ? eth * 10n**18n : BigInt(eth * 10**18)
 export const attodaiToDai = (attodai: bigint) => attoethToEth(attodai)

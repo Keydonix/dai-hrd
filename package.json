@@ -18,6 +18,7 @@
 		"@zoltu/ethereum-types": "8.2.3",
 		"@zoltu/solidity-typescript-generator": "3.0.2",
 		"ganache-cli": "6.7.0",
+		"ganache-core": "2.8.0",
 		"jasmine": "3.5.0",
 		"memdown": "5.1.0",
 		"node-fetch": "2.6.0",
@@ -25,14 +26,13 @@
 		"ts-node": "8.4.1",
 		"typescript": "3.7.2"
 	},
-	"dependencies": {
-		"ganache-core": "2.8.0"
-	},
+	"dependencies": {},
 	"scripts": {
-		"compile": "ts-node ./scripts/compile/index.ts",
-		"start-ganache": "ganache-cli --gasLimit 9600000 --mnemonic \"zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong\" --db \"./test/db\"",
+		"compile": "ts-node ./scripts/compile/index.ts && ttsc --project tsconfig-es.json",
+		"start-ganache": "ts-node ./scripts/libraries/ganache.ts",
 		"deploy": "ts-node ./scripts/deploy/index.ts",
 		"test": "ts-node ./test/test.ts",
-		"clean": "ts-node ./scripts/clean.ts"
+		"clean-all": "ts-node ./scripts/clean/all.ts",
+		"clean-deploy": "ts-node ./scripts/clean/deploy.ts"
 	}
 }

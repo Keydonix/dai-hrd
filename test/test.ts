@@ -1,13 +1,20 @@
+import { Crypto } from '@peculiar/webcrypto'
 import Jasmine = require('jasmine');
 const jasmine = new Jasmine({})
 ;(jasmine.jasmine as any).getEnv().configure({ failFast: true, random: false, oneFailurePerSpec: true })
 
+// necessary so node crypto looks like web crypto, which @zoltu/ethereum-crypto needs
+globalThis.crypto = new Crypto()
+
 import { encodeMethod } from '@zoltu/ethereum-abi-encoder';
 import { keccak256 } from '@zoltu/ethereum-crypto';
-import { duplicateActor, Actor, testDeploy, getGanacheControls, GanacheControls, startGanache } from './helpers';
+import { testDeploy, getGanacheControls, GanacheControls, startGanacheIfNecessary } from './helpers';
 import { MnemonicSigner } from '../scripts/libraries/mnemonic-signer';
-import { xToRontox } from "../scripts/libraries/type-helpers";
-// import { sleep } from "@zoltu/ethereum-fetch-json-rpc/output-node/sleep";
+import { xToRontox, daiToAttodai } from '../scripts/libraries/type-helpers';
+import { Actor, duplicateActor } from '../scripts/libraries/actor';
+import { TestDependencies } from './test-dependencies';
+import { generateDai } from '../scripts/seed/seed-maker';
+import { resetMaker } from '../scripts/seed/reset-maker';
 
 const MAX_APPROVAL = 2n**256n-1n
 
@@ -18,16 +25,16 @@ describe('DaiHrd', () => {
 	let carol: Actor
 
 	beforeAll(async () => {
-		const mnemonic = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong'
-		const port = await startGanache(mnemonic)
-		// TODO: create a system for supporting different targets to test against.  For now, uncomment below and comment above if you want to test against external node
-		// startGanache
-		// const port = 8545
-		alice = await testDeploy(`http://localhost:${port}`, mnemonic.split(' '))
-		bob = await duplicateActor(alice, await MnemonicSigner.create(mnemonic.split(' '), 1))
-		carol = await duplicateActor(alice, await MnemonicSigner.create(mnemonic.split(' '), 2))
+		const signer = await MnemonicSigner.createTest(0)
+		const port = await startGanacheIfNecessary(signer)
+
+		alice = await testDeploy(`http://localhost:${port}`, signer)
+		bob = await duplicateActor(alice, await MnemonicSigner.createTest(1), TestDependencies)
+		carol = await duplicateActor(alice, await MnemonicSigner.createTest(2), TestDependencies)
 
 		ganache = getGanacheControls(alice.rpc)
+
+		await resetMaker(alice)
 
 		// stop auto-mining so we can have tight control on block timestamps
 		// await rpc.remoteProcedureCall({ id: 1, jsonrpc: '2.0', method: 'miner_stop' as unknown as 'eth_chainId' /* lies! */, params: [] })
@@ -50,12 +57,12 @@ describe('DaiHrd', () => {
 	})
 
 	it('can set DSR', async () => {
+		await alice.setDsr.setDsr(xToRontox(1n))
 		expect(await alice.pot.dsr_()).toEqual(10n**27n)
 		const newDsr = xToRontox(1.000001);
 		await alice.setDsr.setDsr(newDsr)
 		expect(await alice.pot.dsr_()).toEqual(newDsr)
 	})
-
 
 	it('balance starts at 0', async () => {
 		const aliceBalance = await alice.daiHrd.balanceOf_(alice.address)
@@ -68,39 +75,54 @@ describe('DaiHrd', () => {
 	})
 
 	it('can deposit dai', async () => {
-		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
-		const balance = await alice.dai.balanceOf_(alice.address)
-		await alice.daiHrd.deposit(balance)
+		const attodaiToDeposit = daiToAttodai(10_000n)
+		await generateDai(alice, attodaiToDeposit)
 
-		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(80n * 10n**18n)
+		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
+		await alice.daiHrd.deposit(attodaiToDeposit)
+
+		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(attodaiToDeposit)
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(0n)
 	})
 
 	it('can deposit and withdraw dai', async () => {
-		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
-		await alice.daiHrd.deposit(await alice.dai.balanceOf_(alice.address))
-		await alice.daiHrd.withdrawTo(alice.address, await alice.daiHrd.balanceOf_(alice.address))
+		const attodaiToDeposit = daiToAttodai(10_000n)
+		await generateDai(alice, attodaiToDeposit)
 
-		expect(await alice.dai.balanceOf_(alice.address)).toEqual(80n * 10n**18n)
+		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
+		await alice.daiHrd.deposit(attodaiToDeposit)
+		await alice.daiHrd.withdrawTo(alice.address, attodaiToDeposit)
+
+		expect(await alice.dai.balanceOf_(alice.address)).toEqual(attodaiToDeposit)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
 	})
+
 	it('can deposit dai and withdraw daiHrd denominated in dai', async () => {
+		const attodaiToDeposit = daiToAttodai(10_000n)
+		await generateDai(alice, attodaiToDeposit)
+
 		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
-		await alice.daiHrd.deposit(await alice.dai.balanceOf_(alice.address))
+		await alice.daiHrd.deposit(attodaiToDeposit)
 		await alice.daiHrd.withdrawToDenominatedInDai(alice.address, await alice.daiHrd.balanceOfDenominatedInDai_(alice.address))
 
-		expect(await alice.dai.balanceOf_(alice.address)).toEqual(80n * 10n**18n)
+		expect(await alice.dai.balanceOf_(alice.address)).toEqual(attodaiToDeposit)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
 	})
 
 	it('can withdraw vat dai', async () => {
+		const attodaiToDeposit = daiToAttodai(10_000n)
+		await generateDai(alice, attodaiToDeposit)
+
 		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
-		await alice.daiHrd.deposit(await alice.dai.balanceOf_(alice.address))
-		await alice.daiHrd.withdrawVatDai(alice.address, await alice.daiHrd.balanceOf_(alice.address))
+		await alice.daiHrd.deposit(attodaiToDeposit)
+		await alice.daiHrd.withdrawVatDai(alice.address, attodaiToDeposit)
 
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(0n)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
-		expect(await alice.vat.dai_(alice.address)).toEqual(80n * 10n**18n * 10n**27n)
+		expect(await alice.vat.dai_(alice.address)).toEqual(attodaiToDeposit * 10n**27n)
+	})
+
+	xit('sandbox', async () => {
 	})
 
 	xit('estimateGas', async () => {
