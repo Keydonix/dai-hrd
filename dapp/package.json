@@ -1,0 +1,24 @@
+{
+	"devDependencies": {
+		"@types/react": "16.8.24",
+		"@types/react-dom": "16.0.5",
+		"@zoltu/typescript-transformer-append-js-extension": "1.0.1",
+		"ts-node": "8.5.0",
+		"ttypescript": "1.5.8",
+		"typescript": "3.7.2"
+	},
+	"dependencies": {
+		"@keydonix/dai-hrd": "file:../",
+		"@zoltu/ethereum-abi-encoder": "3.2.2",
+		"@zoltu/ethereum-crypto": "2.1.1",
+		"@zoltu/ethereum-fetch-json-rpc": "10.1.1",
+		"es-module-shims": "0.4.6",
+		"react": "16.11.0",
+		"react-dom": "16.11.0"
+	},
+	"scripts": {
+		"build": "ttsc",
+		"watch": "ttsc --watch",
+		"serve": "npx http-server ."
+	}
+}
