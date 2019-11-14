@@ -4,9 +4,6 @@ import { compileMaker } from './maker'
 import { compileDaiHrd } from './dai-hrd'
 import { compileErc1820 } from './erc1820'
 
-// necessary so node crypto looks like web crypto, which @zoltu/ethereum-crypto needs
-globalThis.crypto = new Crypto()
-
 const placeholderAddress = 0xadd12e55add12e55add12e55add12e55add12e55n
 
 export async function compile() {
@@ -22,6 +19,9 @@ export async function compile() {
 }
 
 if (require.main === module) {
+	// necessary so node crypto looks like web crypto, which @zoltu/ethereum-crypto needs
+	globalThis.crypto = new Crypto()
+
 	compile().catch(error => {
 		console.error(error.message)
 		console.error(error)

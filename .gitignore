@@ -3,3 +3,4 @@
 /generated/
 /contracts/RuntimeConstants.sol
 /test/db/
+/scripts/deploy/addresses.json

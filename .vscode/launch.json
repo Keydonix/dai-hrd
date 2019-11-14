@@ -29,9 +29,16 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "clean",
+			"name": "clean-all",
 			"runtimeArgs": [ "-r", "ts-node/register" ],
 			"args": [ "${workspaceFolder}/scripts/clean.ts" ],
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "ganache",
+			"runtimeArgs": [ "-r", "ts-node/register" ],
+			"args": [ "${workspaceFolder}/scripts/libraries/ganache.ts" ],
 		},
 	]
 }

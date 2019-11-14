@@ -5,4 +5,4 @@ export const nodeModulesDirectory = path.join(__dirname, '..', '..', 'node_modul
 export const buildCacheDirectory = path.join(__dirname, '..', '..', 'build-cache')
 export const generatedTypeScriptDirectory = path.join(__dirname, '..', '..', 'generated')
 export const testDbDirectory = path.join(__dirname, '..', '..', 'test', 'db')
-export const testAddressesPath = path.join(testDbDirectory, 'addresses.json')
+export const lastDeployAddressPath = path.join(__dirname, '..', 'deploy', 'addresses.json')

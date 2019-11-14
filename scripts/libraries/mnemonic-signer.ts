@@ -17,7 +17,9 @@ export class MnemonicSigner {
 		return new MnemonicSigner(words, privateKey, publicKey, address)
 	}
 
-	sign = async (message: Bytes): Promise<{ r: bigint, s: bigint, yParity: 'even'|'odd' }> => {
+	public static readonly createTest = async (index: number) => await MnemonicSigner.create([ 'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'zoo', 'wrong' ], index)
+
+	public readonly sign = async (message: Bytes): Promise<{ r: bigint, s: bigint, yParity: 'even'|'odd' }> => {
 		const signature = await ethereum.signRaw(this.privateKey, message)
 		return {
 			r: signature.r,
