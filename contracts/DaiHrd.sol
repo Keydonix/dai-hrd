@@ -489,6 +489,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	function withdrawTo(address recipient, uint256 attodaiHrd) external returns(uint256 attodai) {
+		pot.drip();
 		return _withdraw(recipient, attodaiHrd);
 	}
 
@@ -554,7 +555,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 	// Utility Functions
 	function convertAttodaiToAttodaiHrd(uint256 attodai, uint256 rontodaiPerPot ) internal pure returns (uint256 attodaiHrd) {
 		// + 1 is to compensate rounding? since attodaiHrd is rounded down
-		return attodai.mul(10 ** 27).div(rontodaiPerPot);
+		return attodai.mul(10 ** 27).add(rontodaiPerPot - 1).div(rontodaiPerPot);
 	}
 
 	function convertAttodaiHrdToAttodai(uint256 attodaiHrd, uint256 rontodaiPerPot ) internal pure returns (uint256 attodai) {

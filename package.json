@@ -28,7 +28,7 @@
 	},
 	"dependencies": {},
 	"scripts": {
-		"compile": "ts-node ./scripts/compile/index.ts && ttsc --project tsconfig-es.json",
+		"compile": "ts-node ./scripts/compile/index.ts && tsc --project tsconfig-es.json",
 		"start-ganache": "ts-node ./scripts/libraries/ganache.ts",
 		"deploy": "ts-node ./scripts/deploy/index.ts",
 		"test": "ts-node ./test/test.ts",
