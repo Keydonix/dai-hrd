@@ -60,6 +60,6 @@ export function getGanacheControls(rpc: JsonRpc): GanacheControls {
 	}
 }
 
-export async function mineBlock(actor: Actor) {
+export async function triggerInstasealBlock(actor: Actor) {
 	return actor.rpc.sendEth(actor.signer.address, 0n)
 }
