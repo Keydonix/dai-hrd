@@ -9,11 +9,18 @@
 			"problemMatcher": []
 		},
 		{
+			"type": "npm",
+			"script": "start-parity",
+			"problemMatcher": []
+		},
+		{
 			"label": "dapp watch",
 			"type": "npm",
 			"script": "watch",
 			"path": "dapp/",
-			"problemMatcher": [ "$tsc-watch" ],
+			"problemMatcher": [
+				"$tsc-watch"
+			],
 			"group": "build",
 			"isBackground": true
 		},
@@ -29,9 +36,9 @@
 			"label": "dapp watch & serve",
 			"dependsOn": [
 				"dapp watch",
-				"dapp serve",
+				"dapp serve"
 			],
-			"problemMatcher": [],
+			"problemMatcher": []
 		},
 	]
 }

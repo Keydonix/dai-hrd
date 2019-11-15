@@ -7,7 +7,7 @@ export interface TotalDaiLostModel {
 	attodaiSavingsSupply: bigint | undefined
 }
 
-export const TotalDaiLost = (model: Readonly<TotalDaiLostModel>) => {
+export function TotalDaiLost(model: Readonly<TotalDaiLostModel>) {
 	const [startTimeSeconds] = React.useState(Date.now() / 1000)
 	const [daiLost, setDaiLost] = React.useState(0)
 	setTimeout(async () => {
@@ -20,10 +20,10 @@ export const TotalDaiLost = (model: Readonly<TotalDaiLostModel>) => {
 		setDaiLost((Number(model.rontodsr) / 10**27) ** elapsed * unvattedDai)
 	}, 1)
 
-	const onClick = () => model.presentInfoTip(``)
-
-	return <div>
-		DAI Lost:&nbsp;&nbsp;<InfoButton onClick={onClick}/>
+	return <article className='panel'>
+		<header>
+			DAI Lost<InfoButton onClick={() => model.presentInfoTip('The amount of DAI that has gone to MKR holders instead of DAI holders because people are using DAI instead of DAI-HRD.  This is free money that is being given away to MKR holders as a poorly documented fee.')}/>
+		</header>
 		<h2>{daiLost.toFixed(10)} DAI</h2>
-	</div>
+	</article>
 }

@@ -6,7 +6,7 @@ export interface DaiHrdValueModel {
 	attodaiPerDaiHrd: bigint | undefined
 }
 
-export const DaiHrdValue = (model: Readonly<DaiHrdValueModel>) => {
+export function DaiHrdValue(model: Readonly<DaiHrdValueModel>) {
 	const [startTimeSeconds] = React.useState(Date.now() / 1000)
 	const [daiHrdValue, setDaiHrdValue] = React.useState(1)
 	setTimeout(async () => {
@@ -17,10 +17,10 @@ export const DaiHrdValue = (model: Readonly<DaiHrdValueModel>) => {
 		setDaiHrdValue((Number(model.rontodsr) / 10**27) ** elapsed * Number(model.attodaiPerDaiHrd) / 10**18)
 	}, 1)
 
-	const onClick = () => model.presentInfoTip(``)
-
-	return <div>
-		DAI-HRD Value Increase:&nbsp;&nbsp;<InfoButton onClick={onClick}/>
+	return <article className='panel'>
+		<header>
+			DAI-HRD Value Increase<InfoButton onClick={() => model.presentInfoTip('If you had converted 1 DAI to DAI-HRD when opening this page, this is how much DAI it would be worth now.')}/>
+		</header>
 		<h2>{daiHrdValue.toFixed(10)} DAI</h2>
-	</div>
+	</article>
 }

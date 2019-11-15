@@ -35,6 +35,7 @@
 	"scripts": {
 		"compile": "ts-node ./scripts/compile/index.ts && tsc --project tsconfig-es.json",
 		"start-ganache": "ts-node ./scripts/libraries/ganache.ts",
+		"start-parity": "docker container run --rm -it -p 8545:8545 keydonix/parity-instantseal",
 		"deploy": "ts-node ./scripts/deploy/index.ts",
 		"test": "ts-node ./test/test.ts",
 		"clean-all": "ts-node ./scripts/clean/all.ts",
