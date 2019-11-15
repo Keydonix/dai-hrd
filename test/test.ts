@@ -133,10 +133,12 @@ describe('DaiHrd', () => {
 		const upperBalanceAttodaiHrd = upperBoundChiDelta * attodaiHrdMinted / 10n**27n
 
 		const newBalanceAttodaiHrd = await alice.daiHrd.balanceOf_(alice.address)
+		const newBalanceAttodai = await alice.dai.balanceOf_(alice.address);
 
 		expect(newBalanceAttodaiHrd >= lowerBalanceAttodaiHrd).toBeTruthy('Not enough DAI-HRD left over from DSR')
 		expect(newBalanceAttodaiHrd <= upperBalanceAttodaiHrd).toBeTruthy('Too much DAI-HRD left over from DSR')
-		expect(await alice.dai.balanceOf_(alice.address)).toEqual(attodaiToDeposit)
+		expect(newBalanceAttodai >= attodaiToDeposit).toBeTruthy("Did not receive enough DAI")
+		expect(newBalanceAttodai <= attodaiToDeposit + chiAfterWithdraw/10n ** 27n).toBeTruthy("Received too much DAI")
 	})
 
 	it('balance starts at 0', async () => {
