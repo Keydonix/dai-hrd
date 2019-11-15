@@ -1,11 +1,18 @@
 .panel {
+	height: 100px;
 	border-radius: 10px;
 	background-color: whitesmoke;
 	box-shadow: 5px 5px lightgrey;
-	padding: 15px;
-	margin: 15px;
+	padding: 10px;
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
+}
+.panel>section {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }
 
 button {

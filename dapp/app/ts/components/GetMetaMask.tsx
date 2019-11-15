@@ -1,9 +1,9 @@
 export interface GetMetaMaskModel {
-
+	style: React.CSSProperties
 }
 
-export function GetMetaMask(_model: GetMetaMaskModel) {
-	return <div className='panel'>
+export function GetMetaMask(model: GetMetaMaskModel) {
+	return <article className='panel' style={model.style}>
 		It appears that you do not have an Ethereum enabled browser.  Consider installing the <a href='https://metamask.io/'>MetaMask extension</a> in Chrome or Firefox.
-	</div>
+	</article>
 }

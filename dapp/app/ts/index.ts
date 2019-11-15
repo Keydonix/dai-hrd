@@ -52,13 +52,28 @@ async function main() {
 					try {
 						account.depositState = 'depositing'
 						await contracts.daiHrd.deposit(attodai)
-						account.depositState = originalDepositState
-					} catch (error) {
+						account.attodaiHrdBalance = await contracts.daiHrd.balanceOf_(account.address)
+					} finally {
 						account.depositState = originalDepositState
 					}
 				}),
-				address: accounts[0],
-				depositState: allowance > 0 ? 'approved' : 'not-approved'
+				withdrawIntoDai: errorHandler.asyncWrapper(async (attodaiHrd: bigint) => {
+					const account = rootModel.account
+					if (account === undefined) return
+					try {
+						account.withdrawState = 'withdrawing'
+						await contracts.daiHrd.withdrawTo(account.address, attodaiHrd)
+						account.attodaiHrdBalance = await contracts.daiHrd.balanceOf_(account.address)
+
+					} finally {
+						account.withdrawState = 'idle'
+					}
+				}),
+				address: account,
+				attodaiHrdBalance: await contracts.daiHrd.balanceOf_(account),
+				attodaiBalance: await contracts.dai.balanceOf_(account),
+				depositState: allowance > 0 ? 'approved' : 'not-approved',
+				withdrawState: 'idle',
 			}
 		}),
 		rontodsr: undefined,
@@ -88,7 +103,7 @@ async function main() {
 
 	// populate initial savings total supply in model
 	const savingsSupplyInAttodai = await contracts.pot.Pie_()
-	rootModel.attodaiSavingsSupply = savingsSupplyInAttodai
+	rootModel.attodaiSavingsSupply = { value: savingsSupplyInAttodai, timeSeconds: Date.now() / 1000 }
 
 	// populate initial total dai supply in model
 	const totalDaiSupplyInAttorontodai = await contracts.vat.debt_()
@@ -96,7 +111,7 @@ async function main() {
 
 	// populate initial DAI:DAI-HRD exchange rate in model
 	const rontodaiPerPot = await contracts.daiHrd.calculatedChi_()
-	rootModel.attodaiPerDaiHrd = rontodaiPerPot / 10n**9n
+	rootModel.attodaiPerDaiHrd = { value: rontodaiPerPot / 10n**9n, timeSeconds: Date.now() / 1000 }
 }
 
 main().catch(console.error)

@@ -4,36 +4,48 @@ import { Modal } from './Modal';
 import { DepositDai } from './DepositDai';
 import { Connect } from './Connect';
 import { GetMetaMask } from './GetMetaMask';
+import { WithdrawDai } from './WithdrawDai';
 
 export interface AppModel {
-	connect: () => void
+	readonly connect: () => void
 	rontodsr: bigint | undefined
 	attodaiSupply: bigint | undefined
-	attodaiPerDaiHrd: bigint | undefined
-	attodaiSavingsSupply: bigint | undefined
+	attodaiPerDaiHrd: undefined | { value: bigint, timeSeconds: number }
+	attodaiSavingsSupply: undefined | { value: bigint, timeSeconds: number }
 	ethereumBrowser: boolean,
 	account: undefined | {
 		readonly address: bigint
-		depositState: 'not-approved' | 'approving' | 'approved' | 'depositing' | undefined
-		depositIntoDaiHrd: (attodai: bigint) => void
-		approveDaiHrdToSpendDai: () => void
+		readonly approveDaiHrdToSpendDai: () => void
+		readonly depositIntoDaiHrd: (attodai: bigint) => void
+		readonly withdrawIntoDai: (attodaiHrd: bigint) => void
+		attodaiHrdBalance: bigint
+		attodaiBalance: bigint
+		depositState: 'querying' | 'not-approved' | 'approving' | 'approved' | 'depositing'
+		withdrawState: 'idle' | 'withdrawing'
 	}
 }
 
 export function App(model: Readonly<AppModel>) {
 	const [tipContent, setTipContent] = React.useState<string | JSX.Element | undefined>(undefined)
-	return <div style={{ display: 'flex', justifyContent: 'center', width: 'calc(100vw - 30px)', height: 'calc(100vh - 30px)', backgroundColor: 'white', margin: '15px' }}>
-		<section style={{ display: 'flex', flexDirection: 'column' }}>
-			<TotalDaiLost presentInfoTip={setTipContent} rontodsr={model.rontodsr} attodaiSupply={model.attodaiSupply} attodaiSavingsSupply={model.attodaiSavingsSupply} />
-			<DaiHrdValue presentInfoTip={setTipContent} rontodsr={model.rontodsr} attodaiPerDaiHrd={model.attodaiPerDaiHrd} />
+	return <div style={{ display: 'flex', justifyContent: 'center', backgroundColor: 'white', margin: '15px' }}>
+		<section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridAutoRows: '1fr', gridGap: '10px' }}>
+			{model.rontodsr && model.attodaiSupply && model.attodaiSavingsSupply &&
+				<TotalDaiLost presentInfoTip={setTipContent} rontodsr={model.rontodsr} attodaiSupply={model.attodaiSupply} attodaiSavingsSupply={model.attodaiSavingsSupply} />
+			}
+			{model.rontodsr && model.attodaiPerDaiHrd &&
+				<DaiHrdValue presentInfoTip={setTipContent} rontodsr={model.rontodsr} attodaiPerDaiHrd={model.attodaiPerDaiHrd} />
+			}
 			{!model.ethereumBrowser &&
-				<GetMetaMask/>
+				<GetMetaMask style={{ gridColumn: '1/3' }}/>
 			}
 			{model.ethereumBrowser && !model.account &&
-				<Connect connect={model.connect}/>
+				<Connect style={{ gridColumn: '1/3' }} connect={model.connect}/>
 			}
 			{model.account &&
-				<DepositDai presentInfoTip={setTipContent} deposit={model.account.depositIntoDaiHrd} depositState={model.account.depositState} approveDaiHrdToSpendDai={model.account.approveDaiHrdToSpendDai} />
+				<DepositDai presentInfoTip={setTipContent} deposit={model.account.depositIntoDaiHrd} attodaiBalance={model.account.attodaiBalance} depositState={model.account.depositState} approveDaiHrdToSpendDai={model.account.approveDaiHrdToSpendDai} />
+			}
+			{model.account && model.account.attodaiHrdBalance && model.rontodsr && model.attodaiPerDaiHrd &&
+				<WithdrawDai presentInfoTip={setTipContent} withdraw={model.account.withdrawIntoDai} withdrawState={model.account.withdrawState} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
 			}
 			{tipContent &&
 				<Modal content={tipContent} onClose={() => setTipContent(undefined)}/>
