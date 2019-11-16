@@ -2,6 +2,8 @@ import { Dependencies, TransactionReceipt as PartialTransactionReceipt } from '@
 import { EncodableArray, JsonRpcMethod, RawTransactionReceipt, TransactionReceipt, Bytes } from '@zoltu/ethereum-types';
 import { encodeMethod } from '@zoltu/ethereum-abi-encoder';
 import { keccak256 } from '@zoltu/ethereum-crypto';
+import { getGasLimit } from './gas-limits';
+import { ReadonlyFetchJsonRpcDependencies } from './readonly-fetch-dependencies';
 
 interface JsonRpcLike { jsonrpc:'2.0', id:unknown, result:unknown }
 
@@ -16,12 +18,13 @@ declare global {
 export class EthereumBrowserDependencies implements Dependencies {
 	public enabled: boolean = false
 	public address: bigint | undefined = undefined
+	private readonly fallbackDependencies: ReadonlyFetchJsonRpcDependencies
 
-	public constructor(
-		public readonly fallbackDependencies: Dependencies
-	) {}
+	public constructor(jsonRpcEndpoint: string) {
+		this.fallbackDependencies = new ReadonlyFetchJsonRpcDependencies(jsonRpcEndpoint)
+	}
 
-	readonly call = async (address: bigint, methodSignature: string, methodParameters: EncodableArray, value: bigint): Promise<Uint8Array> => {
+	public readonly call = async (address: bigint, methodSignature: string, methodParameters: EncodableArray, value: bigint): Promise<Uint8Array> => {
 		if (!this.enabled) return await this.fallbackDependencies.call(address, methodSignature, methodParameters, value)
 
 		const data = await encodeMethod(keccak256.hash, methodSignature, methodParameters)
@@ -33,17 +36,20 @@ export class EthereumBrowserDependencies implements Dependencies {
 		return Bytes.fromHexString(result.result as string)
 	}
 
-	readonly submitTransaction = async (address: bigint, methodSignature: string, methodParameters: EncodableArray, value: bigint): Promise<PartialTransactionReceipt> => {
+	public readonly submitTransaction = async (address: bigint, methodSignature: string, methodParameters: EncodableArray, value: bigint): Promise<PartialTransactionReceipt> => {
 		if (!this.enabled) await this.enable()
 		if (!this.enabled) throw new Error(`You must enable Ethereum Access to utilize all of the features of this application.`)
 		if (!this.address) throw new Error(`Did not find any Ethereum address set.  This is highly unusual.`)
 
 		const data = await encodeMethod(keccak256.hash, methodSignature, methodParameters)
+		const gasLimit = getGasLimit(methodSignature)
+		const gas = (gasLimit.gasLimit !== undefined) ? { gas: numberToHexString(gasLimit.gasLimit) } : {}
 		const transactionHashString = await this.send('eth_sendTransaction', {
 			from: addressToHexString(this.address),
 			to: addressToHexString(address),
 			data: Bytes.fromByteArray(data).to0xString(),
 			value: numberToHexString(value),
+			...gas,
 		})
 		const transactionHash = BigInt(transactionHashString.result as string)
 		let receipt = await this.getTransactionReceipt(transactionHash)
@@ -55,22 +61,7 @@ export class EthereumBrowserDependencies implements Dependencies {
 		return receipt
 	}
 
-	readonly getAddress = async (): Promise<bigint> => {
-		if (!this.enabled) await this.enable()
-		const address = await this.tryGetAddress()
-		if (address === undefined) throw new Error(`Unable to get address.  Most likely cause: User did not enable MetaMask.`)
-		return address
-	}
-
-	readonly tryGetAddress = async (): Promise<bigint | undefined> => {
-		if (!this.enabled) return undefined
-		const response = await this.send('eth_accounts')
-		const accounts = response.result as readonly string[]
-		if (accounts.length === 0) return undefined
-		return BigInt(accounts[0])
-	}
-
-	enable = async (): Promise<readonly bigint[]> => {
+	public readonly enable = async (): Promise<readonly bigint[]> => {
 		const response = await this.send('eth_requestAccounts')
 		this.enabled = true
 		const result = response.result as readonly string[]
@@ -79,14 +70,17 @@ export class EthereumBrowserDependencies implements Dependencies {
 		return accounts
 	}
 
-	send = async (method: JsonRpcMethod | 'eth_requestAccounts', ...params: unknown[]): Promise<JsonRpcLike> => {
+	public readonly needsBrowserExtension = () => !!window.ethereum
+
+	private readonly send = async (method: JsonRpcMethod | 'eth_requestAccounts', ...params: unknown[]): Promise<JsonRpcLike> => {
 		return new Promise((resolve, reject) => {
 			window.ethereum.sendAsync({ jsonrpc: '2.0', method, params }, (error, result) => error ? reject(error) : resolve(result))
 		})
 	}
 
-	getTransactionReceipt = async (transactionHash: bigint): Promise<TransactionReceipt> => {
+	private readonly getTransactionReceipt = async (transactionHash: bigint): Promise<TransactionReceipt | null> => {
 		const response = await this.send('eth_getTransactionReceipt', hashToHexString(transactionHash))
+		if (response.result === null) return null
 		return new TransactionReceipt(response.result as RawTransactionReceipt)
 	}
 }

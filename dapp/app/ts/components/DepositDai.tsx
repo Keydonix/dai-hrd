@@ -39,7 +39,10 @@ export function DepositDai(model: DepositDaiModel) {
 			}
 			{model.depositState === 'approved' &&
 				<>
-					<input style={{ margin: '5px' }} type='text' placeholder='Amount of DAI to convert.' onChange={event => setDaiToConvert(event.target.value)} value={daiToConvert} />
+					<span>
+						<input style={{ margin: '5px' }} type='text' placeholder='Amount of DAI to convert.' onChange={event => setDaiToConvert(event.target.value)} value={daiToConvert} />
+						<button onClick={() => setDaiToConvert(bigintDaiToDecimalString(model.attodaiBalance))}>Max</button>
+					</span>
 					{attodaiToConvert &&
 						<button onClick={() => attodaiToConvert ? model.deposit(attodaiToConvert) : undefined }>Start Earning</button>
 					}

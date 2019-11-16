@@ -16,10 +16,10 @@ export function WithdrawDai(model: Readonly<WithdrawDaiModel>) {
 	const [ daiHrdToWithdraw, setDaiHrdToWithdraw ] = React.useState('')
 	const attodaiHrdToWithdraw = decimalStringToBigintDai(daiHrdToWithdraw)
 
-	// setBalanceInDai(daiHrdToDai(model.balance, model.attodaiPerDaiHrd.value, model.rontoDsr, model.attodaiPerDaiHrd.timeSeconds))
-	setTimeout(async () => {
-		setBalanceInDai(daiHrdToDai(model.attodaiHrdBalance, model.attodaiPerDaiHrd.value, model.rontoDsr, model.attodaiPerDaiHrd.timeSeconds))
-	}, 1)
+	React.useEffect(() => {
+		const timerId = setInterval(() => setBalanceInDai(daiHrdToDai(model.attodaiHrdBalance, model.attodaiPerDaiHrd.value, model.rontoDsr, model.attodaiPerDaiHrd.timeSeconds)), 1)
+		return () => clearTimeout(timerId)
+	}, [])
 
 	return <article className='panel'>
 		<header style={{  }}>
@@ -33,7 +33,10 @@ export function WithdrawDai(model: Readonly<WithdrawDaiModel>) {
 			</>
 			{model.withdrawState === 'idle' &&
 				<>
-					<input style={{ margin: '5px' }} type='text' placeholder='Amount of DAI-HRD to withdraw.' onChange={event => setDaiHrdToWithdraw(event.target.value)} value={daiHrdToWithdraw} />
+					<span>
+						<input style={{ margin: '5px' }} type='text' placeholder='Amount of DAI-HRD to withdraw.' onChange={event => setDaiHrdToWithdraw(event.target.value)} value={daiHrdToWithdraw} />
+						<button onClick={() => setDaiHrdToWithdraw(bigintDaiToDecimalString(model.attodaiHrdBalance))}>Max</button>
+					</span>
 					{attodaiHrdToWithdraw &&
 						<button onClick={() => attodaiHrdToWithdraw ? model.withdraw(attodaiHrdToWithdraw) : undefined }>Stop Earning</button>
 					}

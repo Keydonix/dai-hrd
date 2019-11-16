@@ -40,5 +40,13 @@
 			"runtimeArgs": [ "-r", "ts-node/register" ],
 			"args": [ "${workspaceFolder}/scripts/libraries/ganache.ts" ],
 		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "dapp - vendor",
+			"cwd": "${workspaceFolder}/dapp/build",
+			"runtimeArgs": [ "-r", "ts-node/register" ],
+			"args": [ "${workspaceFolder}/dapp/build/vendor.ts" ],
+		},
 	]
 }

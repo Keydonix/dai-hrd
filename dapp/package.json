@@ -2,6 +2,7 @@
 	"devDependencies": {
 		"@types/react": "16.8.24",
 		"@types/react-dom": "16.0.5",
+		"@zoltu/file-copier": "2.2.1",
 		"@zoltu/typescript-transformer-append-js-extension": "1.0.1",
 		"ts-node": "8.5.0",
 		"ttypescript": "1.5.8",
@@ -17,8 +18,8 @@
 		"react-dom": "16.11.0"
 	},
 	"scripts": {
-		"build": "ttsc",
+		"build": "ttsc && ts-node --project build/tsconfig.json build/vendor.ts",
 		"watch": "ttsc --watch",
-		"serve": "npx http-server ."
+		"serve": "npx http-server ./app"
 	}
 }

@@ -26,3 +26,15 @@ npm run deploy
 npm run compile
 npm run test
 ```
+
+## Web App
+```
+npm run compile
+npm run start-ganache # background, consider using VSCode task
+npm run deploy
+npx ts-node ./scripts/seed/seed-maker.ts
+cd dapp
+npm run build
+npm run serve # consider background, consider using VSCode task
+```
+Open http://127.0.0.1:8081/index.html

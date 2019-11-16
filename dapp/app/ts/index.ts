@@ -1,26 +1,22 @@
-import { encodeMethod } from '@zoltu/ethereum-abi-encoder'
-import { FetchJsonRpc } from '@zoltu/ethereum-fetch-json-rpc'
-import { keccak256 } from '@zoltu/ethereum-crypto'
-import { Dependencies } from '@keydonix/dai-hrd'
 import { createOnChangeProxy } from './library/proxy'
 import { App, AppModel } from './components/App'
-import { EthereumBrowserDependencies } from './library/ethereum-browser'
 import { ContractConnections as Contracts } from './library/contracts'
 import { ErrorHandler } from './library/error-handler'
+// import { EthereumBrowserDependencies } from './library/ethereum-browser-dependencies'
+import { PrivateFetchDependencies } from './library/private-fetch-dependencies'
 
 // put the model on the window for debugging convenience
 declare global { interface Window { rootModel: AppModel } }
 
+const jsonRpcAddress = 'http://127.0.0.1:8545'
+const daiHrdAddress = 0xd2f610770e82faa6c4b514f47a673f70979a2aden
+
 async function main() {
 	const errorHandler = new ErrorHandler()
 
-	// TODO: use metamask if available
-	const rpc = new FetchJsonRpc('http://127.0.0.1:8545', window.fetch.bind(window), async () => 10n**9n)
-	const fetchJsonRpcDependencies: Dependencies = {
-		call: async (to, methodSignature, parameters, value) => await rpc.offChainContractCall({ to, data: await encodeMethod(keccak256.hash, methodSignature, parameters), value }),
-		submitTransaction: async () => { throw new Error(`Transaction signing not supported.  Consider using MetaMask instead.`) }
-	}
-	const ethereumBrowserDependencies = new EthereumBrowserDependencies(fetchJsonRpcDependencies)
+	// const dependencies = new EthereumBrowserDependencies(jsonRpcAddress)
+	const dependencies = new PrivateFetchDependencies(jsonRpcAddress)
+	const contracts = await Contracts.create(daiHrdAddress, dependencies)
 
 	/**
 	 * React Setup
@@ -28,7 +24,7 @@ async function main() {
 
 	const rootModel = createOnChangeProxy<AppModel>(render, {
 		connect: errorHandler.asyncWrapper(async () => {
-			const accounts = await ethereumBrowserDependencies.enable()
+			const accounts = await dependencies.enable()
 			if (accounts.length === 0) return
 			const account = accounts[0]
 			const allowance = await contracts.dai.allowance_(account, contracts.daiHrd.address)
@@ -53,6 +49,7 @@ async function main() {
 						account.depositState = 'depositing'
 						await contracts.daiHrd.deposit(attodai)
 						account.attodaiHrdBalance = await contracts.daiHrd.balanceOf_(account.address)
+						account.attodaiBalance = await contracts.dai.balanceOf_(account.address)
 					} finally {
 						account.depositState = originalDepositState
 					}
@@ -64,7 +61,7 @@ async function main() {
 						account.withdrawState = 'withdrawing'
 						await contracts.daiHrd.withdrawTo(account.address, attodaiHrd)
 						account.attodaiHrdBalance = await contracts.daiHrd.balanceOf_(account.address)
-
+						account.attodaiBalance = await contracts.dai.balanceOf_(account.address)
 					} finally {
 						account.withdrawState = 'idle'
 					}
@@ -80,7 +77,7 @@ async function main() {
 		attodaiSupply: undefined,
 		attodaiSavingsSupply: undefined,
 		attodaiPerDaiHrd: undefined,
-		ethereumBrowser: !!window.ethereum,
+		ethereumBrowser: dependencies.needsBrowserExtension(),
 		account: undefined,
 	})
 	window.rootModel = rootModel
@@ -94,8 +91,6 @@ async function main() {
 
 	// kick off the initial render
 	render()
-
-	const contracts = await Contracts.create(0xd2f610770e82faa6c4b514f47a673f70979a2aden, ethereumBrowserDependencies)
 
 	// populate initial DSR in the model
 	const rontodsr = await contracts.pot.dsr_()

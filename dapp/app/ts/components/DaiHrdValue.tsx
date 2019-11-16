@@ -9,15 +9,19 @@ export interface DaiHrdValueModel {
 
 export function DaiHrdValue(model: Readonly<DaiHrdValueModel>) {
 	const [daiHrdValue, setDaiHrdValue] = React.useState(1)
-	setTimeout(async () => {
-		if (model.attodaiPerDaiHrd === undefined) return
-		if (model.rontodsr === undefined) return
-		setDaiHrdValue(daiHrdToDai(10n**18n, model.attodaiPerDaiHrd.value, model.rontodsr, model.attodaiPerDaiHrd.timeSeconds))
-	}, 1)
+
+	React.useEffect(() => {
+		const timerId = setInterval(() => {
+			if (model.attodaiPerDaiHrd === undefined) return
+			if (model.rontodsr === undefined) return
+			setDaiHrdValue(daiHrdToDai(10n**18n, model.attodaiPerDaiHrd.value, model.rontodsr, model.attodaiPerDaiHrd.timeSeconds))
+		}, 1)
+		return () => clearTimeout(timerId)
+	}, [])
 
 	return <article className='panel'>
 		<header>
-			DAI-HRD Value Increase<InfoButton onClick={() => model.presentInfoTip('If you had converted 1 DAI to DAI-HRD when opening this page, this is how much DAI it would be worth now.')}/>
+			DAI-HRD Value<InfoButton onClick={() => model.presentInfoTip('The current value of 1 DAI-HRD denominated in DAI.')}/>
 		</header>
 		<section>
 			<h2>{daiHrdValue.toFixed(10)} DAI</h2>
