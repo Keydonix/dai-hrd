@@ -159,7 +159,7 @@ describe('DaiHrd', () => {
 		const depositEvents = await alice.daiHrd.deposit(attodaiToDeposit);
 		expect(depositEvents.filter(event => event.name === 'Deposit')).toEqual([{
 			name: 'Deposit',
-			parameters: { from: alice.address, attodai: attodaiToDeposit }
+			parameters: { from: alice.address, depositedAttodai: attodaiToDeposit, mintedAttodaiHrd: attodaiToDeposit }
 		}])
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(attodaiToDeposit)
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(0n)
@@ -175,7 +175,7 @@ describe('DaiHrd', () => {
 
 		expect(withdrawEvents.filter(event => event.name === 'Withdrawal')).toEqual([{
 			name: 'Withdrawal',
-			parameters: { from: alice.address, to: alice.address, attodai: attodaiToDeposit }
+			parameters: { from: alice.address, to: alice.address, withdrawnAttodai: attodaiToDeposit, burnedAttodaiHrd: attodaiToDeposit }
 		}])
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(attodaiToDeposit)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
@@ -199,7 +199,7 @@ describe('DaiHrd', () => {
 		const withdrawEvents = await bob.daiHrd.withdrawTo(bob.address, attodaiToDeposit);
 		expect(withdrawEvents.filter(event => event.name === 'Withdrawal')).toEqual([{
 			name: 'Withdrawal',
-			parameters: { from: bob.address, to: bob.address, attodai: attodaiToDeposit }
+			parameters: { from: bob.address, to: bob.address, withdrawnAttodai: attodaiToDeposit, burnedAttodaiHrd: attodaiToDeposit }
 		}])
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(0n)
 		expect(await bob.dai.balanceOf_(bob.address)).toEqual(attodaiToDeposit)
@@ -217,7 +217,7 @@ describe('DaiHrd', () => {
 
 		expect(withdrawEvents.filter(event => event.name === 'Withdrawal')).toEqual([{
 			name: 'Withdrawal',
-			parameters: { from: alice.address, to: bob.address, attodai: attodaiToDeposit }
+			parameters: { from: alice.address, to: bob.address, withdrawnAttodai: attodaiToDeposit, burnedAttodaiHrd: attodaiToDeposit }
 		}])
 		expect(await bob.dai.balanceOf_(bob.address)).toEqual(attodaiToDeposit)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
@@ -233,7 +233,7 @@ describe('DaiHrd', () => {
 
 		expect(withdrawEvents.filter(event => event.name === 'WithdrawalVatDai')).toEqual([{
 			name: 'WithdrawalVatDai',
-			parameters: { from: alice.address, to: alice.address, attorontodai: xToRontox(attodaiToDeposit ) }
+			parameters: { from: alice.address, to: alice.address, withdrawnAttorontodai: xToRontox(attodaiToDeposit), burnedAttodaiHrd: attodaiToDeposit }
 		}])
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(0n)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
