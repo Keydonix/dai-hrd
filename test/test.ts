@@ -156,8 +156,11 @@ describe('DaiHrd', () => {
 		await generateDai(alice, attodaiToDeposit)
 
 		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
-		await alice.daiHrd.deposit(attodaiToDeposit)
-
+		const depositEvents = await alice.daiHrd.deposit(attodaiToDeposit);
+		expect(depositEvents.filter(event => event.name === 'Deposit')).toEqual([{
+			name: 'Deposit',
+			parameters: { from: alice.address, attodai: attodaiToDeposit }
+		}])
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(attodaiToDeposit)
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(0n)
 	})
@@ -168,21 +171,55 @@ describe('DaiHrd', () => {
 
 		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
 		await alice.daiHrd.deposit(attodaiToDeposit)
-		await alice.daiHrd.withdrawTo(alice.address, attodaiToDeposit)
+		const withdrawEvents = await alice.daiHrd.withdrawTo(alice.address, attodaiToDeposit);
 
+		expect(withdrawEvents.filter(event => event.name === 'Withdrawal')).toEqual([{
+			name: 'Withdrawal',
+			parameters: { from: alice.address, to: alice.address, attodai: attodaiToDeposit }
+		}])
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(attodaiToDeposit)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
 	})
 
-	it('can deposit dai and withdraw daiHrd denominated in dai', async () => {
+	it('can deposit, transfer, and withdraw dai', async () => {
 		const attodaiToDeposit = daiToAttodai(10_000n)
 		await generateDai(alice, attodaiToDeposit)
 
 		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
 		await alice.daiHrd.deposit(attodaiToDeposit)
-		await alice.daiHrd.withdrawToDenominatedInDai(alice.address, await alice.daiHrd.balanceOfDenominatedInDai_(alice.address))
+		expect(await bob.dai.balanceOf_(bob.address)).toEqual(0n)
+		const transferEvents = await alice.daiHrd.transfer(bob.address, attodaiToDeposit);
+		expect(transferEvents).toEqual([
+			{ name: 'Sent', parameters: { operator: alice.address, from: alice.address, to: bob.address, amount: attodaiToDeposit, operatorData: new Uint8Array(), data: new Uint8Array() } },
+			{ name: 'Transfer', parameters: { src: alice.address, dst: bob.address, wad: attodaiToDeposit } },
+			])
 
-		expect(await alice.dai.balanceOf_(alice.address)).toEqual(attodaiToDeposit)
+		expect(await bob.daiHrd.balanceOf_(bob.address)).toEqual(attodaiToDeposit)
+
+		const withdrawEvents = await bob.daiHrd.withdrawTo(bob.address, attodaiToDeposit);
+		expect(withdrawEvents.filter(event => event.name === 'Withdrawal')).toEqual([{
+			name: 'Withdrawal',
+			parameters: { from: bob.address, to: bob.address, attodai: attodaiToDeposit }
+		}])
+		expect(await alice.dai.balanceOf_(alice.address)).toEqual(0n)
+		expect(await bob.dai.balanceOf_(bob.address)).toEqual(attodaiToDeposit)
+		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
+	})
+
+
+	it('can deposit dai and withdraw daiHrd denominated in dai, to someone else', async () => {
+		const attodaiToDeposit = daiToAttodai(10_000n)
+		await generateDai(alice, attodaiToDeposit)
+
+		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
+		await alice.daiHrd.deposit(attodaiToDeposit)
+		const withdrawEvents = await alice.daiHrd.withdrawToDenominatedInDai(bob.address, await alice.daiHrd.balanceOfDenominatedInDai_(alice.address));
+
+		expect(withdrawEvents.filter(event => event.name === 'Withdrawal')).toEqual([{
+			name: 'Withdrawal',
+			parameters: { from: alice.address, to: bob.address, attodai: attodaiToDeposit }
+		}])
+		expect(await bob.dai.balanceOf_(bob.address)).toEqual(attodaiToDeposit)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
 	})
 
@@ -192,8 +229,12 @@ describe('DaiHrd', () => {
 
 		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
 		await alice.daiHrd.deposit(attodaiToDeposit)
-		await alice.daiHrd.withdrawVatDai(alice.address, attodaiToDeposit)
+		const withdrawEvents = await alice.daiHrd.withdrawVatDai(alice.address, attodaiToDeposit);
 
+		expect(withdrawEvents.filter(event => event.name === 'WithdrawalVatDai')).toEqual([{
+			name: 'WithdrawalVatDai',
+			parameters: { from: alice.address, to: alice.address, attorontodai: xToRontox(attodaiToDeposit ) }
+		}])
 		expect(await alice.dai.balanceOf_(alice.address)).toEqual(0n)
 		expect(await alice.daiHrd.balanceOf_(alice.address)).toEqual(0n)
 		expect(await alice.vat.dai_(alice.address)).toEqual(attodaiToDeposit * 10n**27n)
