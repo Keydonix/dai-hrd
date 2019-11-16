@@ -468,6 +468,11 @@ contract MakerFunctions {
 
 
 contract DaiHrd is ERC777, MakerFunctions {
+	event Deposit(address indexed from, uint256 depositedAttodai, uint256 mintedAttodaiHrd);
+	event Withdrawal(address indexed from, address indexed to, uint256 withdrawnAttodai, uint256 burnedAttodaiHrd);
+	event DepositVatDai(address indexed account, uint256 depositedAttorontodai, uint256 mintedAttodaiHrd);
+	event WithdrawalVatDai(address indexed from, address indexed to, uint256 withdrawnAttorontodai, uint256 burnedAttodaiHrd);
+
 	// uses this super constructor syntax instead of the preferred alternative syntax because my editor doesn't like the class syntax
 	constructor() ERC777("DAI-HRD", "DAI-HRD", new address[](0)) public {
 		dai.approve(address(daiJoin), uint(-1));
@@ -478,14 +483,18 @@ contract DaiHrd is ERC777, MakerFunctions {
 	function deposit(uint256 attodai) external returns(uint256 depositedAttopot) {
 		dai.transferFrom(msg.sender, address(this), attodai);
 		daiJoin.join(address(this), dai.balanceOf(address(this)));
-		return depositVatDaiForAccount(msg.sender);
+		depositedAttopot = depositVatDaiForAccount(msg.sender);
+		emit Deposit(msg.sender, attodai, depositedAttopot);
+		return depositedAttopot;
 	}
 
 	// If the user has vat dai directly (after performing vault actions, for instance), they don't need to create the DAI ERC20 for us to burn it, we'll accept vat dai
 	function depositVatDai(uint256 attoVatDai) external returns(uint256 depositedAttopot) {
 		uint256 attorontodai = attoVatDai.mul(10 ** 27);
 		vat.move(msg.sender, address(this), attorontodai);
-		return depositVatDaiForAccount(msg.sender);
+		depositedAttopot = depositVatDaiForAccount(msg.sender);
+		emit DepositVatDai(msg.sender, attorontodai, depositedAttopot);
+		return depositedAttopot;
 	}
 
 	function withdrawTo(address recipient, uint256 attodaiHrd) external returns(uint256 attodai) {
@@ -509,6 +518,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 		pot.exit(attodaiHrd);
 		attorontodai = vat.dai(address(this));
 		vat.move(address(this), recipient, attorontodai);
+		emit WithdrawalVatDai(msg.sender, recipient, attorontodai, attodaiHrd);
 		return attorontodai;
 	}
 
@@ -590,6 +600,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 		daiJoin.exit(address(this), vat.dai(address(this)) / 10**27);
 		attodai = dai.balanceOf(address(this));
 		dai.transfer(recipient, attodai);
+		emit Withdrawal(msg.sender, recipient, attodai, attodaiHrd);
 		return attodai;
 	}
 }
