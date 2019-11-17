@@ -466,6 +466,9 @@ contract MakerFunctions {
 	}
 }
 
+contract ReverseRegistrar {
+	function setName(string memory name) public returns (bytes32 node);
+}
 
 contract DaiHrd is ERC777, MakerFunctions {
 	event Deposit(address indexed from, uint256 depositedAttodai, uint256 mintedAttodaiHrd);
@@ -474,10 +477,13 @@ contract DaiHrd is ERC777, MakerFunctions {
 	event WithdrawalVatDai(address indexed from, address indexed to, uint256 withdrawnAttorontodai, uint256 burnedAttodaiHrd);
 
 	// uses this super constructor syntax instead of the preferred alternative syntax because my editor doesn't like the class syntax
-	constructor() ERC777("DAI-HRD", "DAI-HRD", new address[](0)) public {
+	constructor(ReverseRegistrar reverseRegistrar) ERC777("DAI-HRD", "DAI-HRD", new address[](0)) public {
 		dai.approve(address(daiJoin), uint(-1));
 		vat.hope(address(pot));
 		vat.hope(address(daiJoin));
+		if (reverseRegistrar != ReverseRegistrar(0)) {
+			reverseRegistrar.setName("dai-hrd.eth");
+		}
 	}
 
 	function deposit(uint256 attodai) external returns(uint256 depositedAttopot) {
