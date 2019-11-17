@@ -23,7 +23,10 @@ export async function resetMaker(actor: Actor) {
 	if (await pot.dsr_() !== dsr) await setDsr.setDsr(dsr)
 
 	// set ETH launch parameters (pulled from official deployed contracts)
-	await vat.file(ethId, stringLiteralToBigint('rate'), 1000389702408434119151108112n)
+
+	// Rate is not set this way (having this in makes everything fail). It comes from jug.drip.
+	// await vat.file(ethId, stringLiteralToBigint('rate'), 1000389702408434119151108112n)
+
 	await vat.file(ethId, stringLiteralToBigint('spot'), 122593498983333333333333333333n)
 	await vat.file(ethId, stringLiteralToBigint('line'), 0n)
 	await vat.file(ethId, stringLiteralToBigint('dust'), 20000000000000000000000000000000000000000000000n)
