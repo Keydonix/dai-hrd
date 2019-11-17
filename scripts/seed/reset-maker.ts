@@ -22,13 +22,17 @@ export async function resetMaker(actor: Actor) {
 	const dsr = xToRontox(1n)
 	if (await pot.dsr_() !== dsr) await setDsr.setDsr(dsr)
 
-	// set ETH price
-	await vat.file(ethId, stringLiteralToBigint('spot'), xToRontox(190n))
+	// set ETH launch parameters (pulled from official deployed contracts)
+	await vat.file(ethId, stringLiteralToBigint('rate'), 1000389702408434119151108112n)
+	await vat.file(ethId, stringLiteralToBigint('spot'), 122593498983333333333333333333n)
+	await vat.file(ethId, stringLiteralToBigint('line'), 0n)
+	await vat.file(ethId, stringLiteralToBigint('dust'), 20000000000000000000000000000000000000000000000n)
 
-	// set ETH debt ceiling
-	const attorontodaiDebtCeiling = xToAttorontox(100_000_000n)
+	// set ETH debt ceiling (from official launch trigger)
+	const attorontodaiDebtCeiling = xToAttorontox(153_000_000n)
+	const ethCollateralAttorontodaiDebtCeiling = xToAttorontox(50_000_000n)
 	await vat.file2(stringLiteralToBigint('Line'), attorontodaiDebtCeiling)
-	await vat.file(ethId, stringLiteralToBigint('line'), attorontodaiDebtCeiling)
+	await vat.file(ethId, stringLiteralToBigint('line'), ethCollateralAttorontodaiDebtCeiling)
 
 	// move all DAI-HRD to vat
 	const attodaiHrdBalance = await daiHrd.balanceOf_(signer.address)

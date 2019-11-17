@@ -222,8 +222,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 *
 	 * Emits {Sent} and {Transfer} events.
 	 */
-	function operatorSend(address sender, address recipient, uint256 amount, bytes calldata data, bytes calldata operatorData) external
-	{
+	function operatorSend(address sender, address recipient, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
 		require(isOperatorFor(_msgSender(), sender), "ERC777: caller is not an operator for holder");
 		_send(_msgSender(), sender, recipient, amount, data, operatorData, true);
 	}
@@ -310,8 +309,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * - if `account` is a contract, it must implement the {IERC777Recipient}
 	 * interface.
 	 */
-	function _mint(address operator, address account, uint256 amount, bytes memory userData, bytes memory operatorData) internal
-	{
+	function _mint(address operator, address account, uint256 amount, bytes memory userData, bytes memory operatorData) internal {
 		require(account != address(0), "ERC777: mint to the zero address");
 
 		// Update state variables
@@ -335,8 +333,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 * @param requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
 	 */
-	function _send(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal
-	{
+	function _send(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal {
 		require(from != address(0), "ERC777: send from the zero address");
 		require(to != address(0), "ERC777: send to the zero address");
 
@@ -357,8 +354,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 */
 
-	function _burn(address operator, address from, uint256 amount, bytes memory data, bytes memory operatorData) internal
-	{
+	function _burn(address operator, address from, uint256 amount, bytes memory data, bytes memory operatorData) internal {
 		require(from != address(0), "ERC777: burn from the zero address");
 
 		_callTokensToSend(operator, from, address(0), amount, data, operatorData);
@@ -371,8 +367,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 		emit Transfer(from, address(0), amount);
 	}
 
-	function _move(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData) private
-	{
+	function _move(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData) private {
 		_balances[from] = _balances[from].sub(amount, "ERC777: transfer amount exceeds balance");
 		_balances[to] = _balances[to].add(amount);
 
@@ -399,8 +394,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param userData bytes extra information provided by the token holder (if any)
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 */
-	function _callTokensToSend(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData) private
-	{
+	function _callTokensToSend(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData) private {
 		address implementer = _erc1820.getInterfaceImplementer(from, TOKENS_SENDER_INTERFACE_HASH);
 		if (implementer != address(0)) {
 			IERC777Sender(implementer).tokensToSend(operator, from, to, amount, userData, operatorData);
@@ -418,8 +412,7 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 	 * @param operatorData bytes extra information provided by the operator (if any)
 	 * @param requireReceptionAck if true, contract recipients are required to implement ERC777TokensRecipient
 	 */
-	function _callTokensReceived(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) private
-	{
+	function _callTokensReceived(address operator, address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) private {
 		address implementer = _erc1820.getInterfaceImplementer(to, TOKENS_RECIPIENT_INTERFACE_HASH);
 		if (implementer != address(0)) {
 			IERC777Recipient(implementer).tokensReceived(operator, from, to, amount, userData, operatorData);
@@ -430,10 +423,10 @@ contract ERC777 is RuntimeConstants, Context, IERC777, IERC20 {
 }
 
 contract MakerFunctions {
-	uint constant ONE = 10 ** 27;
 	// KEYDONIX: Renamed from `rmul` for clarity
+	// KEYDONIX: Changed ONE to 10**27 for clarity
 	function safeMul27(uint x, uint y) internal pure returns (uint z) {
-		z = safeMul(x, y) / ONE;
+		z = safeMul(x, y) / 10 ** 27;
 	}
 
 	function rpow(uint x, uint n, uint base) internal pure returns (uint z) {
@@ -486,38 +479,38 @@ contract DaiHrd is ERC777, MakerFunctions {
 		}
 	}
 
-	function deposit(uint256 attodai) external returns(uint256 depositedAttopot) {
+	function deposit(uint256 attodai) external returns(uint256 attodaiHrd) {
 		dai.transferFrom(msg.sender, address(this), attodai);
 		daiJoin.join(address(this), dai.balanceOf(address(this)));
-		depositedAttopot = depositVatDaiForAccount(msg.sender);
+		uint256 depositedAttopot = depositVatDaiForAccount(msg.sender);
 		emit Deposit(msg.sender, attodai, depositedAttopot);
 		return depositedAttopot;
 	}
 
-	// If the user has vat dai directly (after performing vault actions, for instance), they don't need to create the DAI ERC20 for us to burn it, we'll accept vat dai
-	function depositVatDai(uint256 attoVatDai) external returns(uint256 depositedAttopot) {
-		uint256 attorontodai = attoVatDai.mul(10 ** 27);
-		vat.move(msg.sender, address(this), attorontodai);
-		depositedAttopot = depositVatDaiForAccount(msg.sender);
-		emit DepositVatDai(msg.sender, attorontodai, depositedAttopot);
+	// If the user has vat dai directly (after performing vault actions, for instance), they don't need to create the DAI ERC20 just so we can burn it, we'll accept vat dai
+	function depositVatDai(uint256 attorontovatDai) external returns(uint256 attodaiHrd) {
+		vat.move(msg.sender, address(this), attorontovatDai);
+		uint256 depositedAttopot = depositVatDaiForAccount(msg.sender);
+		emit DepositVatDai(msg.sender, attorontovatDai, depositedAttopot);
 		return depositedAttopot;
 	}
 
 	function withdrawTo(address recipient, uint256 attodaiHrd) external returns(uint256 attodai) {
-		pot.drip();
-		return _withdraw(recipient, attodaiHrd);
+		// Don't need rontodaiPerPot, so we don't call updateAndFetchChi
+		if (pot.rho() != now) pot.drip();
+		return withdraw(recipient, attodaiHrd);
 	}
 
 	function withdrawToDenominatedInDai(address recipient, uint256 attodai) external returns(uint256 attodaiHrd) {
 		uint256 rontodaiPerPot = updateAndFetchChi();
 		attodaiHrd = convertAttodaiToAttodaiHrd(attodai, rontodaiPerPot);
-		uint256 attodaiWithdrawn = _withdraw(recipient, attodaiHrd);
-		require(attodaiWithdrawn >= attodai, "Not withdrawing enough DAI to cover request");
+		uint256 attodaiWithdrawn = withdraw(recipient, attodaiHrd);
+		require(attodaiWithdrawn >= attodai, "DaiHrd/withdrawToDenominatedInDai: Not withdrawing enough DAI to cover request");
 		return attodaiHrd;
 	}
 
 	function withdrawVatDai(address recipient, uint256 attodaiHrd) external returns(uint256 attorontodai) {
-		require(recipient != address(0) && recipient != address(this), "Invalid recipient");
+		require(recipient != address(0) && recipient != address(this), "DaiHrd/withdrawVatDai: Invalid recipient");
 		// Don't need rontodaiPerPot, so we don't call updateAndFetchChi
 		if (pot.rho() != now) pot.drip();
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
@@ -528,7 +521,7 @@ contract DaiHrd is ERC777, MakerFunctions {
 		return attorontodai;
 	}
 
-	// Dai specific functions. These functions all behave similar to standard functions with input or output denominated in Dai instead of DaiHrd
+	// Dai specific functions. These functions all behave similar to standard ERC777 functions with input or output denominated in Dai instead of DaiHrd
 	function balanceOfDenominatedInDai(address tokenHolder) external view returns(uint256 attodai) {
 		uint256 rontodaiPerPot = calculatedChi();
 		uint256 attodaiHrd = balanceOf(tokenHolder);
@@ -569,28 +562,26 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	// Utility Functions
-	function convertAttodaiToAttodaiHrd(uint256 attodai, uint256 rontodaiPerPot ) internal pure returns (uint256 attodaiHrd) {
+	function calculatedChi() public view returns (uint256 rontodaiPerPot) {
+		// mirrors Maker's calculation: rmul(rpow(dsr, now - rho, ONE), chi);
+		return safeMul27(rpow(pot.dsr(), now - pot.rho(), 10 ** 27), pot.chi());
+	}
+
+	function convertAttodaiToAttodaiHrd(uint256 attodai, uint256 rontodaiPerPot ) private pure returns (uint256 attodaiHrd) {
 		// + 1 is to compensate rounding? since attodaiHrd is rounded down
 		return attodai.mul(10 ** 27).add(rontodaiPerPot - 1).div(rontodaiPerPot);
 	}
 
-	function convertAttodaiHrdToAttodai(uint256 attodaiHrd, uint256 rontodaiPerPot ) internal pure returns (uint256 attodai) {
+	function convertAttodaiHrdToAttodai(uint256 attodaiHrd, uint256 rontodaiPerPot ) private pure returns (uint256 attodai) {
 		return attodaiHrd.mul(rontodaiPerPot).div(10 ** 27);
 	}
 
-	function calculatedChi() public view returns (uint256 rontodaiPerPot) {
-		return safeMul27(rpow(pot.dsr(), now - pot.rho(), ONE), pot.chi());
-	}
-
-	function updateAndFetchChi() internal returns (uint256 rontodaiPerPot) {
-		if (pot.rho() == now) {
-			return pot.chi(); // replace with drop()?? TODO
-		}
-		return pot.drip();
+	function updateAndFetchChi() private returns (uint256 rontodaiPerPot) {
+		return (pot.rho() == now) ? pot.chi() : pot.drip();
 	}
 
 	// Takes whatever vat dai has already been transferred to DaiHrd, gives to pot (DSR) and mints tokens for user
-	function depositVatDaiForAccount(address account) internal returns (uint256 attopotDeposit) {
+	function depositVatDaiForAccount(address account) private returns (uint256 attopotDeposited) {
 		uint256 rontodaiPerPot = updateAndFetchChi();
 		uint256 attopotToDeposit = vat.dai(address(this)) / rontodaiPerPot;
 		pot.join(attopotToDeposit);
@@ -599,12 +590,12 @@ contract DaiHrd is ERC777, MakerFunctions {
 	}
 
 	// Internal implementations of functions with multiple entrypoints. drip() should be called prior to this call
-	function _withdraw(address recipient, uint256 attodaiHrd) internal returns(uint256 attodai) {
-		require(recipient != address(0) && recipient != address(this), "Invalid recipient");
+	function withdraw(address recipient, uint256 attodaiHrd) private returns(uint256 attodaiWithdrawn) {
+		require(recipient != address(0) && recipient != address(this), "DaiHrd/withdraw: Invalid recipient");
 		_burn(address(0), msg.sender, attodaiHrd, new bytes(0), new bytes(0));
 		pot.exit(attodaiHrd);
 		daiJoin.exit(address(this), vat.dai(address(this)) / 10**27);
-		attodai = dai.balanceOf(address(this));
+		uint256 attodai = dai.balanceOf(address(this));
 		dai.transfer(recipient, attodai);
 		emit Withdrawal(msg.sender, recipient, attodai, attodaiHrd);
 		return attodai;
