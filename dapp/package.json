@@ -9,7 +9,7 @@
 		"typescript": "3.7.2"
 	},
 	"dependencies": {
-		"@keydonix/dai-hrd-contracts": "1.0.0",
+		"@keydonix/dai-hrd-contracts": "1.0.1",
 		"@zoltu/ethereum-abi-encoder": "3.2.2",
 		"@zoltu/ethereum-crypto": "2.1.1",
 		"@zoltu/ethereum-types": "8.2.3",

@@ -1,4 +1,4 @@
-import { Dependencies } from '@keydonix/dai-hrd'
+import { Dependencies } from '@keydonix/dai-hrd-contracts'
 import { FetchJsonRpc } from '@zoltu/ethereum-fetch-json-rpc'
 import { encodeMethod, EncodableArray } from '@zoltu/ethereum-abi-encoder'
 import { keccak256 } from '@zoltu/ethereum-crypto'

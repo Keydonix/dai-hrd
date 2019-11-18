@@ -1,4 +1,4 @@
-import { Dependencies, TransactionReceipt as PartialTransactionReceipt } from '@keydonix/dai-hrd'
+import { Dependencies, TransactionReceipt as PartialTransactionReceipt } from '@keydonix/dai-hrd-contracts'
 import { EncodableArray, JsonRpcMethod, RawTransactionReceipt, TransactionReceipt, Bytes } from '@zoltu/ethereum-types';
 import { encodeMethod } from '@zoltu/ethereum-abi-encoder';
 import { keccak256 } from '@zoltu/ethereum-crypto';

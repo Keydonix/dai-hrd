@@ -1,4 +1,4 @@
-import { Dependencies, TransactionReceipt as PartialTransactionReceipt } from '@keydonix/dai-hrd'
+import { Dependencies, TransactionReceipt as PartialTransactionReceipt } from '@keydonix/dai-hrd-contracts'
 import { Bytes } from '@zoltu/ethereum-types'
 import { ethereum, keccak256 } from '@zoltu/ethereum-crypto'
 import { FetchJsonRpc } from '@zoltu/ethereum-fetch-json-rpc'
