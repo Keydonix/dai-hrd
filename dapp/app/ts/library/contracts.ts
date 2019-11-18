@@ -1,4 +1,4 @@
-import { DaiHrd, Pot, Vat, Dai, Dependencies } from '@keydonix/dai-hrd'
+import { DaiHrd, Pot, Vat, Dai, Dependencies } from '@keydonix/dai-hrd-contracts'
 
 export class ContractConnections {
 	private constructor(

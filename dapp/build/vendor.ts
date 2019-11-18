@@ -5,7 +5,7 @@ import { recursiveDirectoryCopy } from '@zoltu/file-copier'
 
 async function vendorDependencies() {
 	const dependencyPaths = [
-		[ '@keydonix/dai-hrd', 'output-es', 'dai-hrd.js' ],
+		[ '@keydonix/dai-hrd-contracts', 'output-es', 'dai-hrd.js' ],
 		[ '@zoltu/ethereum-abi-encoder', 'output-es', 'index.js' ],
 		[ '@zoltu/ethereum-crypto', 'output-es', 'index.js' ],
 		[ '@zoltu/ethereum-fetch-json-rpc', 'output-es', 'index.js' ],

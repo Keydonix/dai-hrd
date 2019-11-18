@@ -1,6 +1,6 @@
 {
-	"name": "@keydonix/dai-hrd",
-	"version": "1.0.0",
+	"name": "@keydonix/dai-hrd-contracts",
+	"version": "1.0.1",
 	"description": "DAI: Hodl Rated DAI  -  A DAI token wrapper that benefits from the Dai Savings Rate (interest).",
 	"repository": "github:keydonix/dai-hrd",
 	"author": "Keydonix",
@@ -40,5 +40,10 @@
 		"test": "ts-node ./test/test.ts",
 		"clean-all": "ts-node ./scripts/clean/all.ts",
 		"clean-deploy": "ts-node ./scripts/clean/deploy.ts"
-	}
+	},
+	"files": [
+		"/build-cache/dai-hrd.json",
+		"/contracts/DaiHrd.sol",
+		"/output-es/dai-hrd.*"
+	]
 }
