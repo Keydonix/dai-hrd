@@ -1,10 +1,12 @@
 {
-	"name": "@keydonix/dai-hrd",
-	"version": "1.0.0",
+	"name": "@keydonix/dai-hrd-contracts",
+	"version": "1.0.1",
 	"description": "DAI: Hodl Rated DAI  -  A DAI token wrapper that benefits from the Dai Savings Rate (interest).",
 	"repository": "github:keydonix/dai-hrd",
 	"author": "Keydonix",
 	"license": "Unlicense",
+	"main": "output-es/dai-hrd.js",
+	"module": "output-es/dai-hrd.js",
 	"devDependencies": {
 		"@openzeppelin/contracts": "2.4.0",
 		"@peculiar/webcrypto": "1.0.21",
@@ -12,11 +14,11 @@
 		"@types/memdown": "3.0.0",
 		"@types/node": "12.12.7",
 		"@types/node-fetch": "2.5.3",
-		"@zoltu/ethereum-abi-encoder": "3.2.2",
 		"@zoltu/ethereum-crypto": "2.1.1",
 		"@zoltu/ethereum-fetch-json-rpc": "10.1.1",
 		"@zoltu/ethereum-types": "8.2.3",
 		"@zoltu/solidity-typescript-generator": "3.0.2",
+		"@zoltu/typescript-transformer-append-js-extension": "1.0.1",
 		"ganache-cli": "6.7.0",
 		"ganache-core": "2.8.0",
 		"jasmine": "3.5.0",
@@ -24,15 +26,24 @@
 		"node-fetch": "2.6.0",
 		"solc": "0.5.12",
 		"ts-node": "8.4.1",
+		"ttypescript": "1.5.8",
 		"typescript": "3.7.2"
 	},
-	"dependencies": {},
+	"dependencies": {
+		"@zoltu/ethereum-abi-encoder": "3.2.2"
+	},
 	"scripts": {
 		"compile": "ts-node ./scripts/compile/index.ts && tsc --project tsconfig-es.json",
 		"start-ganache": "ts-node ./scripts/libraries/ganache.ts",
+		"start-parity": "docker container run --rm -it -p 8545:8545 keydonix/parity-instantseal",
 		"deploy": "ts-node ./scripts/deploy/index.ts",
 		"test": "ts-node ./test/test.ts",
 		"clean-all": "ts-node ./scripts/clean/all.ts",
 		"clean-deploy": "ts-node ./scripts/clean/deploy.ts"
-	}
+	},
+	"files": [
+		"/build-cache/dai-hrd.json",
+		"/contracts/DaiHrd.sol",
+		"/output-es/dai-hrd.*"
+	]
 }
