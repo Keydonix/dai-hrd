@@ -67,7 +67,6 @@ export function WithdrawDai(model: Readonly<WithdrawDaiModel>) {
 				<section style={{
 					display: 'flex',
 					flexDirection: 'row',
-					gap: '12px',
 					height: '40px',
 				}}>
 					<input style={{
@@ -82,6 +81,7 @@ export function WithdrawDai(model: Readonly<WithdrawDaiModel>) {
 						fontWeight: 'normal',
 						fontSize: '14px',
 					}} type='text' placeholder='Amount of DAI-HRD to withdraw' onChange={event => setDaiHrdToWithdraw(event.target.value)} value={daiHrdToWithdraw} />
+					<div style={{ width: '12px' }}></div>
 					<div onClick={() => setDaiHrdToWithdraw(bigintDaiToDecimalString(model.attodaiHrdBalance))} style={{
 						height: 'inherit',
 						width: '75px',

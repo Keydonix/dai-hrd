@@ -4,6 +4,7 @@ export interface DaiWastedModel {
 	presentInfoTip: (info: string | JSX.Element) => void
 	rontodsr: bigint
 	attodaiSupply: bigint
+	attodaiPerDaiHrd: { value: bigint, timeSeconds: number }
 	attodaiSavingsSupply: { value: bigint, timeSeconds: number }
 }
 
@@ -11,7 +12,7 @@ export function DaiWasted(model: Readonly<DaiWastedModel>) {
 	const [daiLost, setDaiLost] = React.useState(0)
 	setTimeout(async () => {
 		const unvattedAttodai = model.attodaiSupply - model.attodaiSavingsSupply.value
-		setDaiLost(daiHrdToDai(unvattedAttodai, 10n**18n, model.rontodsr, model.attodaiSavingsSupply.timeSeconds))
+		setDaiLost(daiHrdToDai(unvattedAttodai, model.attodaiPerDaiHrd.value, model.rontodsr, model.attodaiPerDaiHrd.timeSeconds) - Number(unvattedAttodai) / 10**18)
 	}, 1)
 
 	return <article style={{
