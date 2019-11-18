@@ -11,7 +11,7 @@ export class ReadonlyFetchJsonRpcDependencies implements Dependencies {
 	}
 
 	public readonly call = async (to: bigint, methodSignature: string, parameters: EncodableArray, value: bigint): Promise<Uint8Array> => {
-		return await this.rpc.offChainContractCall({ to, data: await encodeMethod(keccak256.hash, methodSignature, parameters), value })
+		return await this.rpc.offChainContractCall({ from: 0n, to, data: await encodeMethod(keccak256.hash, methodSignature, parameters), value })
 	}
 
 	public readonly submitTransaction = async () => {

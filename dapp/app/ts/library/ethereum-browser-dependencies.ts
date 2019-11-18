@@ -70,7 +70,7 @@ export class EthereumBrowserDependencies implements Dependencies {
 		return accounts
 	}
 
-	public readonly needsBrowserExtension = () => !!window.ethereum
+	public readonly noBrowserExtensionNeeded = () => !!window.ethereum
 
 	private readonly send = async (method: JsonRpcMethod | 'eth_requestAccounts', ...params: unknown[]): Promise<JsonRpcLike> => {
 		return new Promise((resolve, reject) => {

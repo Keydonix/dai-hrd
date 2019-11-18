@@ -32,5 +32,5 @@ export class PrivateFetchDependencies implements Dependencies {
 		return [this.address]
 	}
 
-	public readonly needsBrowserExtension = () => false
+	public readonly noBrowserExtensionNeeded = () => true
 }

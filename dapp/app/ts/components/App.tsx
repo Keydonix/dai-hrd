@@ -5,6 +5,7 @@ import { DepositDai } from './DepositDai';
 import { Connect } from './Connect';
 import { GetMetaMask } from './GetMetaMask';
 import { WithdrawDai } from './WithdrawDai';
+import { SpinnerPanel } from './Spinner';
 
 export interface AppModel {
 	readonly connect: () => void
@@ -13,7 +14,7 @@ export interface AppModel {
 	attodaiPerDaiHrd: undefined | { value: bigint, timeSeconds: number }
 	attodaiSavingsSupply: undefined | { value: bigint, timeSeconds: number }
 	ethereumBrowser: boolean,
-	account: undefined | {
+	account: undefined | 'connecting' | {
 		readonly address: bigint
 		readonly approveDaiHrdToSpendDai: () => void
 		readonly depositIntoDaiHrd: (attodai: bigint) => void
@@ -41,10 +42,13 @@ export function App(model: Readonly<AppModel>) {
 			{model.ethereumBrowser && !model.account &&
 				<Connect style={{ gridColumn: '1/3' }} connect={model.connect}/>
 			}
-			{model.account &&
+			{model.account === 'connecting' &&
+				<SpinnerPanel style={{ gridColumn: '1/3' }}/>
+			}
+			{model.account && model.account !== 'connecting' &&
 				<DepositDai presentInfoTip={setTipContent} deposit={model.account.depositIntoDaiHrd} attodaiBalance={model.account.attodaiBalance} depositState={model.account.depositState} approveDaiHrdToSpendDai={model.account.approveDaiHrdToSpendDai} />
 			}
-			{model.account && model.account.attodaiHrdBalance && model.rontodsr && model.attodaiPerDaiHrd &&
+			{model.account && model.account !== 'connecting' && model.account.attodaiHrdBalance && model.rontodsr && model.attodaiPerDaiHrd &&
 				<WithdrawDai presentInfoTip={setTipContent} withdraw={model.account.withdrawIntoDai} withdrawState={model.account.withdrawState} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
 			}
 			{tipContent &&

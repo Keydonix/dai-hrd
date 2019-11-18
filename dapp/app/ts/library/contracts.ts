@@ -10,9 +10,10 @@ export class ContractConnections {
 
 	public static readonly create = async (daiHrdAddress: bigint, dependencies: Dependencies): Promise<ContractConnections> => {
 		const daiHrd = new DaiHrd(dependencies, daiHrdAddress)
-		const dai = new Dai(dependencies, await daiHrd.dai_())
-		const pot = new Pot(dependencies, await daiHrd.pot_())
-		const vat = new Vat(dependencies, await daiHrd.vat_())
+		const [daiAddress, potAddress, vatAddress] = await Promise.all([daiHrd.dai_(), daiHrd.pot_(), daiHrd.vat_()])
+		const dai = new Dai(dependencies, daiAddress)
+		const pot = new Pot(dependencies, potAddress)
+		const vat = new Vat(dependencies, vatAddress)
 		return new ContractConnections(daiHrd, dai, pot, vat)
 	}
 }

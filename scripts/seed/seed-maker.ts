@@ -33,7 +33,7 @@ export async function generateDai(actor: Actor, attodai: bigint) {
 }
 
 async function seedMakerWithTestAccount() {
-	const actor = await createTestActorFromAddresses('http://localhost:8545', DependenciesImpl)
+	const actor = await createTestActorFromAddresses('https://dev-parity.keydonix.com', DependenciesImpl)
 	return await seedMaker(actor)
 }
 

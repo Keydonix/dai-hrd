@@ -65,7 +65,7 @@ export async function deployAndCache(rpc: JsonRpc, dependencies: Dependencies, d
 }
 
 export async function deployToLocalTestNetwork() {
-	const jsonRpcEndpoint = 'http://localhost:8545'
+	const jsonRpcEndpoint = 'https://dev-parity.keydonix.com'
 	const signer = await MnemonicSigner.createTest(0)
 	const gasPrice = 10n**9n
 	const rpc = new FetchJsonRpc(jsonRpcEndpoint, fetch, async () => gasPrice, async () => signer.address, signer.sign)
