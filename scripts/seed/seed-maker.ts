@@ -26,10 +26,10 @@ export async function generateDai(actor: Actor, attodai: bigint) {
 	await actor.ethJoin.join(actor.signer.address, attoethToDeposit)
 
 	// create CDP to get VatDAI
-	await actor.vat.frob(ethId, actor.signer.address, actor.signer.address, actor.signer.address, attoethToDeposit, daiToAttodai(10_000n))
+	await actor.vat.frob(ethId, actor.signer.address, actor.signer.address, actor.signer.address, attoethToDeposit, attodai)
 
 	// deposit VatDAI into DAI
-	await actor.daiJoin.exit(actor.signer.address, daiToAttodai(10_000n))
+	await actor.daiJoin.exit(actor.signer.address, attodai)
 }
 
 async function seedMakerWithTestAccount() {
