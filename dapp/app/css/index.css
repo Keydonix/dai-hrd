@@ -1,44 +1,15 @@
-.panel {
-	height: 100px;
-	border-radius: 10px;
-	background-color: whitesmoke;
-	box-shadow: 5px 5px lightgrey;
-	padding: 10px;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-}
-.panel>section {
-	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
+body {
+	background: #151721
 }
 
-button {
-	box-shadow:inset 0px 1px 0px 0px #97c4fe;
-	background:linear-gradient(to bottom, #3d94f6 5%, #1e62d0 100%);
-	background-color:#3d94f6;
-	border-radius:6px;
-	border:1px solid #337fed;
-	display:inline-block;
-	cursor:pointer;
-	color:#ffffff;
-	font-family:Arial;
-	font-size:15px;
-	font-weight:bold;
-	padding:6px 24px;
-	text-decoration:none;
-	text-shadow:0px 1px 0px #1570cd;
-	margin: 5px;
-}
-button:hover {
-	background:linear-gradient(to bottom, #1e62d0 5%, #3d94f6 100%);
-	background-color:#1e62d0;
-}
-button:active {
-	position:relative;
-	top:1px;
+.header {
+	font-family: PT Mono;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 24px;
+	line-height: 27px;
+
+	color: #FFFFFF;
 }
 
 input[type=number] {
@@ -55,7 +26,7 @@ input[type=number]::-webkit-outer-spin-button {
 .spinner {
 	width: 40px;
 	height: 40px;
-	background-color: #333;
+	background-color: #00C3C2;
 
 	border-radius: 100%;
 	-webkit-animation: sk-scaleout 1.0s infinite ease-in-out;

@@ -8,14 +8,17 @@ import { EthereumBrowserDependencies } from './library/ethereum-browser-dependen
 // put the model on the window for debugging convenience
 declare global { interface Window { rootModel: AppModel } }
 
+// const jsonRpcAddress = 'https://dev-parity.keydonix.com'
+// const daiHrdAddress = 0xd2f610770e82faa6c4b514f47a673f70979a2aden
 const jsonRpcAddress = 'https://parity.zoltu.io'
 const daiHrdAddress = 0x9b869c2eaae08136c43d824ea75a2f376f1aa983n
+// const dependencies = new PrivateFetchDependencies(jsonRpcAddress)
+const dependencies = new EthereumBrowserDependencies(jsonRpcAddress)
+
 
 async function main() {
 	const errorHandler = new ErrorHandler()
 
-	const dependencies = new EthereumBrowserDependencies(jsonRpcAddress)
-	// const dependencies = new PrivateFetchDependencies(jsonRpcAddress)
 	const contracts = await Contracts.create(daiHrdAddress, dependencies)
 
 	/**
@@ -24,62 +27,67 @@ async function main() {
 
 	const rootModel = createOnChangeProxy<AppModel>(render, {
 		connect: errorHandler.asyncWrapper(async () => {
-			rootModel.account = 'connecting'
-			const addresses = await dependencies.enable()
-			if (addresses.length === 0) return
-			const address = addresses[0]
-			const [ allowance, attodaiHrdBalance, attodaiBalance ] = await Promise.all([
-				contracts.dai.allowance_(address, contracts.daiHrd.address),
-				contracts.daiHrd.balanceOf_(address),
-				contracts.dai.balanceOf_(address),
-			])
-			rootModel.account = {
-				approveDaiHrdToSpendDai: errorHandler.asyncWrapper(async () => {
-					const account = rootModel.account
-					if (account === undefined || account === 'connecting') return
-					try {
-						account.depositState = 'approving'
-						await contracts.dai.approve(contracts.daiHrd.address, 2n**256n - 1n)
-						account.depositState = 'approved'
-					} catch (error) {
-						account.depositState = 'not-approved'
-						throw error
-					}
-				}),
-				depositIntoDaiHrd: errorHandler.asyncWrapper(async (attodai: bigint) => {
-					const account = rootModel.account
-					if (account === undefined || account === 'connecting') return
-					const originalDepositState = account.depositState
-					try {
-						account.depositState = 'depositing'
-						await contracts.daiHrd.deposit(attodai)
-						;[ account.attodaiHrdBalance, account.attodaiBalance ] = await Promise.all([
-							contracts.daiHrd.balanceOf_(account.address),
-							contracts.dai.balanceOf_(account.address),
-						])
-					} finally {
-						account.depositState = originalDepositState
-					}
-				}),
-				withdrawIntoDai: errorHandler.asyncWrapper(async (attodaiHrd: bigint) => {
-					const account = rootModel.account
-					if (account === undefined || account === 'connecting') return
-					try {
-						account.withdrawState = 'withdrawing'
-						await contracts.daiHrd.withdrawTo(account.address, attodaiHrd)
-						;[ account.attodaiHrdBalance, account.attodaiBalance ] = await Promise.all([
-							contracts.daiHrd.balanceOf_(account.address),
-							contracts.dai.balanceOf_(account.address),
-						])
-					} finally {
-						account.withdrawState = 'idle'
-					}
-				}),
-				address: address,
-				attodaiHrdBalance,
-				attodaiBalance,
-				depositState: allowance > 0 ? 'approved' : 'not-approved',
-				withdrawState: 'idle',
+			try {
+				rootModel.account = 'connecting'
+				const addresses = await dependencies.enable()
+				if (addresses.length === 0) return
+				const address = addresses[0]
+				const [ allowance, attodaiHrdBalance, attodaiBalance ] = await Promise.all([
+					contracts.dai.allowance_(address, contracts.daiHrd.address),
+					contracts.daiHrd.balanceOf_(address),
+					contracts.dai.balanceOf_(address),
+				])
+				rootModel.account = {
+					approveDaiHrdToSpendDai: errorHandler.asyncWrapper(async () => {
+						const account = rootModel.account
+						if (account === undefined || account === 'connecting') return
+						try {
+							account.depositState = 'approving'
+							await contracts.dai.approve(contracts.daiHrd.address, 2n**256n - 1n)
+							account.depositState = 'approved'
+						} catch (error) {
+							account.depositState = 'not-approved'
+							throw error
+						}
+					}),
+					depositIntoDaiHrd: errorHandler.asyncWrapper(async (attodai: bigint) => {
+						const account = rootModel.account
+						if (account === undefined || account === 'connecting') return
+						const originalDepositState = account.depositState
+						try {
+							account.depositState = 'depositing'
+							await contracts.daiHrd.deposit(attodai)
+							;[ account.attodaiHrdBalance, account.attodaiBalance ] = await Promise.all([
+								contracts.daiHrd.balanceOf_(account.address),
+								contracts.dai.balanceOf_(account.address),
+							])
+						} finally {
+							account.depositState = originalDepositState
+						}
+					}),
+					withdrawIntoDai: errorHandler.asyncWrapper(async (attodaiHrd: bigint) => {
+						const account = rootModel.account
+						if (account === undefined || account === 'connecting') return
+						try {
+							account.withdrawState = 'withdrawing'
+							await contracts.daiHrd.withdrawTo(account.address, attodaiHrd)
+							;[ account.attodaiHrdBalance, account.attodaiBalance ] = await Promise.all([
+								contracts.daiHrd.balanceOf_(account.address),
+								contracts.dai.balanceOf_(account.address),
+							])
+						} finally {
+							account.withdrawState = 'idle'
+						}
+					}),
+					address: address,
+					attodaiHrdBalance,
+					attodaiBalance,
+					depositState: allowance > 0 ? 'approved' : 'not-approved',
+					withdrawState: 'idle',
+				}
+			} catch (error) {
+				rootModel.account = undefined
+				throw error
 			}
 		}),
 		rontodsr: undefined,
