@@ -15,6 +15,7 @@ import { Actor, duplicateActor } from '../scripts/libraries/actor';
 import { TestDependencies } from './test-dependencies';
 import { generateDai } from '../scripts/seed/seed-maker';
 import { resetMaker } from '../scripts/seed/reset-maker';
+import { IOffChainTransaction } from "@zoltu/ethereum-types/output-node";
 
 const MAX_APPROVAL = 2n**256n-1n
 
@@ -241,6 +242,59 @@ describe('DaiHrd', () => {
 	})
 
 	xit('sandbox', async () => {
+	})
+
+	// This requires changing DaiHrd.updateAndFetchChi() from private to public
+	xit('chi variable gas usage report', async () => {
+		const MINUTES_TO_CHECK = [
+			1,
+			60,
+			60*24,
+			60*24*365,
+			60*24*365 * 10,
+		]
+		const attodaiToDeposit = daiToAttodai(10_000n)
+		await generateDai(alice, attodaiToDeposit)
+		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
+		await alice.daiHrd.deposit(attodaiToDeposit)
+
+		const baseEstimateTx = {
+			from: alice.address,
+			to: alice.daiHrd.address,
+			value: 0n,
+			gasLimit: 1000000n,
+			gasPrice: 1000000000n
+		};
+
+		const updateAndFetchChiEstimate = {
+			...baseEstimateTx,
+			data: await encodeMethod(keccak256.hash, 'updateAndFetchChi()', []),
+		}
+
+		const calculatedChiEstimate = {
+			...baseEstimateTx,
+			data: await encodeMethod(keccak256.hash, 'calculatedChi()', []),
+		};
+
+		async function gasEstimatesByMinute(tx: IOffChainTransaction) {
+			const results: Array<[number, bigint]> = []
+			await alice.pot.drip();
+			results.push([0, await alice.rpc.estimateGas(tx)])
+			for (const minute of MINUTES_TO_CHECK) {
+				await alice.pot.drip();
+				await ganache.advanceTime(minute * 60)
+				results.push([minute, await alice.rpc.estimateGas(tx)])
+			}
+			return results;
+		}
+
+		const updateAndFetchResults = await gasEstimatesByMinute(updateAndFetchChiEstimate);
+		console.log("updateAndFetchChi()")
+		updateAndFetchResults.forEach(report => console.log(`${report[1]} gas : ${report[0]} minutes`))
+
+		const calculateChiResults = await gasEstimatesByMinute(calculatedChiEstimate);
+		console.log("\ncalculateChi()")
+		calculateChiResults.forEach(report => console.log(`${report[1]} gas : ${report[0]} minutes`))
 	})
 
 	xit('estimateGas', async () => {
