@@ -4,7 +4,11 @@ import { attodaiToDai, bigintRontoToDecimalString, bigintAttoToDecimalString, bi
 import { createTestActorFromAddresses } from './libraries/actor'
 
 export async function sandbox() {
-	const alice = await createTestActorFromAddresses('http://localhost:8545', DependenciesImpl)
+	const alice = await createTestActorFromAddresses('https://dev-parity.keydonix.com', DependenciesImpl)
+
+	console.log(await alice.dai.approve(alice.daiHrd.address, 0n))
+	console.log(alice.signer.address)
+	console.log(alice.signer.privateKey)
 
 	const EthId = await alice.ethJoin.ilk_()
 

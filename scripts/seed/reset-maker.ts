@@ -59,7 +59,7 @@ export async function resetMaker(actor: Actor) {
 }
 
 async function resetMakerWithTestAccount() {
-	const actor = await createTestActorFromAddresses('http://localhost:8545', DependenciesImpl)
+	const actor = await createTestActorFromAddresses('https://dev-parity.keydonix.com', DependenciesImpl)
 	await resetMaker(actor)
 }
 

@@ -8,5 +8,37 @@
 			"script": "start-ganache",
 			"problemMatcher": []
 		},
+		{
+			"type": "npm",
+			"script": "start-parity",
+			"problemMatcher": []
+		},
+		{
+			"label": "dapp watch",
+			"type": "npm",
+			"script": "watch",
+			"path": "dapp/",
+			"problemMatcher": [
+				"$tsc-watch"
+			],
+			"group": "build",
+			"isBackground": true
+		},
+		{
+			"label": "dapp serve",
+			"type": "npm",
+			"script": "serve",
+			"path": "dapp/",
+			"problemMatcher": [],
+			"isBackground": true
+		},
+		{
+			"label": "dapp watch & serve",
+			"dependsOn": [
+				"dapp watch",
+				"dapp serve"
+			],
+			"problemMatcher": []
+		},
 	]
 }
