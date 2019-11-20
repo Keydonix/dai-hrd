@@ -266,17 +266,22 @@ describe('DaiHrd', () => {
 			gasPrice: 1000000000n
 		};
 
-		const updateAndFetchChiEstimate = {
+		const withdrawToEstimate = {
 			...baseEstimateTx,
-			data: await encodeMethod(keccak256.hash, 'updateAndFetchChi()', []),
-		}
+			data: await encodeMethod(keccak256.hash, 'withdrawTo(address,uint256)', [alice.address, daiToAttodai(1)]),
+		};
 
 		const calculatedChiEstimate = {
 			...baseEstimateTx,
 			data: await encodeMethod(keccak256.hash, 'calculatedChi()', []),
 		};
 
-		async function gasEstimatesByMinute(tx: IOffChainTransaction) {
+		const updateAndFetchChiEstimate = {
+			...baseEstimateTx,
+			data: await encodeMethod(keccak256.hash, 'updateAndFetchChi()', []),
+		}
+
+		async function printEstimatesByMinute(tx: IOffChainTransaction) {
 			const results: Array<[number, bigint]> = []
 			await alice.pot.drip();
 			results.push([0, await alice.rpc.estimateGas(tx)])
@@ -285,16 +290,18 @@ describe('DaiHrd', () => {
 				await ganache.advanceTime(minute * 60)
 				results.push([minute, await alice.rpc.estimateGas(tx)])
 			}
-			return results;
+			results.forEach(report => console.log(`${report[1]} gas : ${report[0]} minutes`))
 		}
 
-		const updateAndFetchResults = await gasEstimatesByMinute(updateAndFetchChiEstimate);
-		console.log("updateAndFetchChi()")
-		updateAndFetchResults.forEach(report => console.log(`${report[1]} gas : ${report[0]} minutes`))
+		console.log("withdrawTo()")
+		await printEstimatesByMinute(withdrawToEstimate)
 
-		const calculateChiResults = await gasEstimatesByMinute(calculatedChiEstimate);
 		console.log("\ncalculateChi()")
-		calculateChiResults.forEach(report => console.log(`${report[1]} gas : ${report[0]} minutes`))
+		await printEstimatesByMinute(calculatedChiEstimate);
+
+		console.log("\nupdateAndFetchChi()")
+		await printEstimatesByMinute(updateAndFetchChiEstimate);
+
 	})
 
 	xit('estimateGas', async () => {
