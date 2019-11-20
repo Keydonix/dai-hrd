@@ -2,7 +2,6 @@ import { Dependencies, TransactionReceipt as PartialTransactionReceipt } from '@
 import { EncodableArray, JsonRpcMethod, RawTransactionReceipt, TransactionReceipt, Bytes } from '@zoltu/ethereum-types';
 import { encodeMethod } from '@zoltu/ethereum-abi-encoder';
 import { keccak256 } from '@zoltu/ethereum-crypto';
-import { getGasLimit } from './gas-limits';
 import { ReadonlyFetchJsonRpcDependencies } from './readonly-fetch-dependencies';
 
 interface JsonRpcLike { jsonrpc:'2.0', id:unknown, result:unknown }
@@ -42,15 +41,14 @@ export class EthereumBrowserDependencies implements Dependencies {
 		if (!this.address) throw new Error(`Did not find any Ethereum address set.  This is highly unusual.`)
 
 		const data = await encodeMethod(keccak256.hash, methodSignature, methodParameters)
-		const gasLimit = getGasLimit(methodSignature)
-		const gas = (gasLimit.gasLimit !== undefined) ? { gas: numberToHexString(gasLimit.gasLimit) } : {}
-		const transactionHashString = await this.send('eth_sendTransaction', {
+		const transaction = {
 			from: addressToHexString(this.address),
 			to: addressToHexString(address),
 			data: Bytes.fromByteArray(data).to0xString(),
 			value: numberToHexString(value),
-			...gas,
-		})
+		} as const
+		const gasEstimate = await this.estimateGas(transaction)
+		const transactionHashString = await this.send('eth_sendTransaction', { ...transaction, gas: numberToHexString(gasEstimate + 55_000n)})
 		const transactionHash = BigInt(transactionHashString.result as string)
 		let receipt = await this.getTransactionReceipt(transactionHash)
 		while (receipt === null || receipt.blockNumber === null) {
@@ -76,6 +74,12 @@ export class EthereumBrowserDependencies implements Dependencies {
 		return new Promise((resolve, reject) => {
 			window.ethereum.sendAsync({ jsonrpc: '2.0', method, params }, (error, result) => error ? reject(error) : resolve(result))
 		})
+	}
+
+	private readonly estimateGas = async (transaction: unknown): Promise<bigint> => {
+		const response = await this.send('eth_estimateGas', transaction)
+		if (!/0x[a-zA-Z0-9]+/.test(response.result as string)) throw new Error(`Unexpected result from 'eth_estimateGas': ${response.result}`)
+		return BigInt(response.result)
 	}
 
 	private readonly getTransactionReceipt = async (transactionHash: bigint): Promise<TransactionReceipt | null> => {

@@ -15,4 +15,12 @@ export class ErrorHandler {
 			asyncFunction(...args).catch(this.noticeError)
 		}
 	}
+
+	public readonly asyncCatcher = <R, P extends any[]>(asyncFunction: (...args: P) => Promise<R>): (...args: P) => Promise<R> => {
+		return async (...args) => {
+			const promise = asyncFunction(...args)
+			promise.catch(this.noticeError)
+			return await promise
+		}
+	}
 }

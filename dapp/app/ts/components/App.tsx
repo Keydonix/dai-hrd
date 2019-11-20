@@ -5,6 +5,8 @@ import { Connect } from './Connect';
 import { GetMetaMask } from './GetMetaMask';
 import { WithdrawDai } from './WithdrawDai';
 import { SpinnerPanel } from './Spinner';
+import { SendDai } from './SendDai';
+import { SendDaiHrd } from './SendDaiHrd';
 
 export interface AppModel {
 	readonly connect: () => void
@@ -18,6 +20,8 @@ export interface AppModel {
 		readonly approveDaiHrdToSpendDai: () => void
 		readonly depositIntoDaiHrd: (attodai: bigint) => void
 		readonly withdrawIntoDai: (attodaiHrd: bigint) => void
+		readonly sendDai: (recipient: bigint, attodai: bigint) => Promise<void>
+		readonly sendDaiHrd: (recipient: bigint, attodaiHrd: bigint) => Promise<void>
 		attodaiHrdBalance: bigint
 		attodaiBalance: bigint
 		depositState: 'querying' | 'not-approved' | 'approving' | 'approved' | 'depositing'
@@ -37,28 +41,28 @@ export function App(model: Readonly<AppModel>) {
 			? <DaiWasted presentInfoTip={setTipContent} rontodsr={model.rontodsr} attodaiSupply={model.attodaiSupply} attodaiSavingsSupply={model.attodaiSavingsSupply} attodaiPerDaiHrd={model.attodaiPerDaiHrd} />
 			: <div style={{ height: '200px' }}></div>
 		}
-		<div style={{ height: '15px' }}></div>
+		<div style={{ height: '15px', flexShrink: 0 }}></div>
 		{!model.ethereumBrowser &&
 			<GetMetaMask/>
 		}
 		{model.ethereumBrowser && !model.account &&
-			<Connect connect={model.connect}/>
+			<Connect style={{ flexShrink: 0 }} connect={model.connect}/>
 		}
 		{model.account === 'connecting' &&
 			<SpinnerPanel/>
 		}
-		{model.account &&
-			<section style={{ display: 'grid', gridTemplateColumns: '300px 300px', gridTemplateRows: '200px', gridGap: '25px' }}>
-				{model.account && model.account !== 'connecting' &&
-					<DepositDai presentInfoTip={setTipContent} deposit={model.account.depositIntoDaiHrd} attodaiBalance={model.account.attodaiBalance} depositState={model.account.depositState} approveDaiHrdToSpendDai={model.account.approveDaiHrdToSpendDai} />
-				}
-				{model.account && model.account !== 'connecting' && model.account.attodaiHrdBalance && model.rontodsr && model.attodaiPerDaiHrd &&
-					<WithdrawDai presentInfoTip={setTipContent} withdraw={model.account.withdrawIntoDai} withdrawState={model.account.withdrawState} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
-				}
+		{model.account && model.account !== 'connecting' && <>
+			<section style={{ display: 'grid', gridTemplateColumns: '300px 300px', gridTemplateRows: '200px', gap: '15px' }}>
+				<DepositDai presentInfoTip={setTipContent} deposit={model.account.depositIntoDaiHrd} attodaiBalance={model.account.attodaiBalance} depositState={model.account.depositState} approveDaiHrdToSpendDai={model.account.approveDaiHrdToSpendDai} />
+				<WithdrawDai presentInfoTip={setTipContent} withdraw={model.account.withdrawIntoDai} withdrawState={model.account.withdrawState} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
+				<SendDai sendDai={model.account.sendDai} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
+				<SendDaiHrd sendDaiHrd={model.account.sendDaiHrd} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
 			</section>
-		}
+		</>}
+		<div style={{ height: '15px', flexShrink: 0 }}></div>
+		<iframe style={{ width: '615px', minHeight: '768px', border: 'none', borderRadius: '4px' }} src='https://uniswap.exchange/swap?outputCurrency=0x9B869c2eaae08136C43d824EA75A2F376f1aA983'></iframe>
 		<div style={{ flexGrow: 1 }}></div>
-		<nav style={{ display: 'flex', flexDirection: 'row' }}>
+		<nav style={{ display: 'flex', flexDirection: 'row', padding: '15px' }}>
 			<a href='https://discord.gg/b88nb2S'>
 				<svg width="22" height="24" viewBox="0 0 22 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 					<path d="M8.448 10.068C7.764 10.068 7.224 10.668 7.224 11.4C7.224 12.132 7.776 12.732 8.448 12.732C9.132 12.732 9.672 12.132 9.672 11.4C9.684 10.668 9.132 10.068 8.448 10.068ZM12.828 10.068C12.144 10.068 11.604 10.668 11.604 11.4C11.604 12.132 12.156 12.732 12.828 12.732C13.512 12.732 14.052 12.132 14.052 11.4C14.052 10.668 13.512 10.068 12.828 10.068Z" fill="white" fill-opacity="0.35"/>

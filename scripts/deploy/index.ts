@@ -17,8 +17,9 @@ import { Factory as UniswapFactory } from '../../generated/uniswap'
 import { Dai, Vat, Pot, DaiJoin, ETHJoin } from '../../generated/maker'
 import { mnemonic } from '@zoltu/ethereum-crypto'
 import { addressToChecksummedString } from '@zoltu/ethereum-crypto/output-node/ethereum'
+import { Contracts } from '../libraries/actor'
 
-export async function testnetDeploy(rpc: JsonRpc, dependencies: Dependencies) {
+export async function testnetDeploy(rpc: JsonRpc, dependencies: Dependencies): Promise<Contracts> {
 	console.log('deploying ERC1820...')
 	await deployErc1820(rpc, dependencies)
 
@@ -39,7 +40,7 @@ export async function testnetDeploy(rpc: JsonRpc, dependencies: Dependencies) {
 	return { uniswapFactory, dai, vat, pot, daiJoin, ethJoin, daiHrd, setDsr }
 }
 
-export async function mainnetDeploy(rpc: JsonRpc, dependencies: Dependencies) {
+export async function mainnetDeploy(rpc: JsonRpc, dependencies: Dependencies): Promise<Contracts> {
 	const uniswapFactory = new UniswapFactory(dependencies, 0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95n)
 	const dai = new Dai(dependencies, 0x6b175474e89094c44da98b954eedeac495271d0fn)
 	const vat = new Vat(dependencies, 0x35d1b3f3d7966a1dfe207aa4514c12a259a0492bn)
@@ -52,10 +53,11 @@ export async function mainnetDeploy(rpc: JsonRpc, dependencies: Dependencies) {
 	console.log('deploying DaiHrd...')
 	const daiHrd = await deployDaiHrd(rpc, dependencies, 0x9062c0a6dbd6108336bcbe4593a3d1ce05512069n)
 
-	return { uniswapFactory, dai, vat, pot, daiJoin, ethJoin, daiHrd }
+	// this typecast is a load of lies, but we only need mainnet deploy to work once... 😬
+	return { uniswapFactory, dai, vat, pot, daiJoin, ethJoin, daiHrd } as unknown as Contracts
 }
 
-export async function deployAndCache(rpc: JsonRpc, dependencies: Dependencies, deployer: (rpc: JsonRpc, dependencies: Dependencies) => Promise<Record<string, {address: bigint}>>) {
+export async function deployAndCache(rpc: JsonRpc, dependencies: Dependencies, deployer: (rpc: JsonRpc, dependencies: Dependencies) => Promise<Contracts>) {
 	const deployments = await deployer(rpc, dependencies)
 	console.log(`DAI-HRD: ${deployments.daiHrd.address}`)
 	await ensureDirectoryExists(testDbDirectory)
@@ -65,6 +67,15 @@ export async function deployAndCache(rpc: JsonRpc, dependencies: Dependencies, d
 }
 
 export async function deployToLocalTestNetwork() {
+	const jsonRpcEndpoint = 'http://127.0.0.1:8545'
+	const signer = await MnemonicSigner.createTest(0)
+	const gasPrice = 10n**9n
+	const rpc = new FetchJsonRpc(jsonRpcEndpoint, fetch, async () => gasPrice, async () => signer.address, signer.sign)
+	const dependencies = new DependenciesImpl(rpc)
+	await deployAndCache(rpc, dependencies, testnetDeploy)
+}
+
+export async function deployToRemoteTestNetwork() {
 	const jsonRpcEndpoint = 'https://dev-parity.keydonix.com'
 	const signer = await MnemonicSigner.createTest(0)
 	const gasPrice = 10n**9n
@@ -89,7 +100,7 @@ if (require.main === module) {
 	// necessary so node crypto looks like web crypto, which @zoltu/ethereum-crypto needs
 	globalThis.crypto = new Crypto()
 
-	deployToMainnet().catch(error => {
+	deployToRemoteTestNetwork().catch(error => {
 		console.error(error.message)
 		console.error(error)
 		process.exit(1)

@@ -16,7 +16,7 @@ export function DaiWasted(model: Readonly<DaiWastedModel>) {
 	}, 1)
 
 	return <article style={{
-		width: '575px',
+		width: '565px',
 		height: '150px',
 		backgroundColor: '#222632',
 		borderRadius: '4px',
