@@ -245,13 +245,15 @@ describe('DaiHrd', () => {
 	})
 
 	// This requires changing DaiHrd.updateAndFetchChi() from private to public
-	xit('chi variable gas usage report', async () => {
-		const MINUTES_TO_CHECK = [
+	fit('chi variable gas usage report', async () => {
+		const SECONDS_TO_CHECK = [
 			1,
-			60,
-			60*24,
-			60*24*365,
-			60*24*365 * 10,
+			60 * 60,
+			60 * 60 * 24,
+			60 * 60 * 24 * 365,
+			60 * 60 * 24 * 365 * 10,
+			0b1111111111111111111111111, // 33_554_431 ~ 1 year
+			0b1111111111111111111111111111, // 268,435,455 ~ 10 year
 		]
 		const attodaiToDeposit = daiToAttodai(10_000n)
 		await generateDai(alice, attodaiToDeposit)
@@ -281,26 +283,26 @@ describe('DaiHrd', () => {
 			data: await encodeMethod(keccak256.hash, 'updateAndFetchChi()', []),
 		}
 
-		async function printEstimatesByMinute(tx: IOffChainTransaction) {
+		async function printEstimatesBySecond(tx: IOffChainTransaction) {
 			const results: Array<[number, bigint]> = []
 			await alice.pot.drip();
 			results.push([0, await alice.rpc.estimateGas(tx)])
-			for (const minute of MINUTES_TO_CHECK) {
+			for (const seconds of SECONDS_TO_CHECK) {
 				await alice.pot.drip();
-				await ganache.advanceTime(minute * 60)
-				results.push([minute, await alice.rpc.estimateGas(tx)])
+				await ganache.advanceTime(seconds)
+				results.push([seconds, await alice.rpc.estimateGas(tx)])
 			}
-			results.forEach(report => console.log(`${report[1]} gas : ${report[0]} minutes`))
+			results.forEach(report => console.log(`${report[1]} gas : ${report[0]} seconds`))
 		}
 
 		console.log("withdrawTo()")
-		await printEstimatesByMinute(withdrawToEstimate)
+		await printEstimatesBySecond(withdrawToEstimate)
 
 		console.log("\ncalculateChi()")
-		await printEstimatesByMinute(calculatedChiEstimate);
+		await printEstimatesBySecond(calculatedChiEstimate);
 
 		console.log("\nupdateAndFetchChi()")
-		await printEstimatesByMinute(updateAndFetchChiEstimate);
+		await printEstimatesBySecond(updateAndFetchChiEstimate);
 
 	})
 
