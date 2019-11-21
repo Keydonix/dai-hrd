@@ -5,7 +5,7 @@ import { MnemonicSigner } from '../scripts/libraries/mnemonic-signer'
 import { TestDependencies } from './test-dependencies'
 import { JsonRpc } from '@zoltu/ethereum-types'
 import { PrivateKeySigner } from '../scripts/libraries/privatekey-signer'
-import { deployAndCache } from '../scripts/deploy'
+import { deployAndCache, testnetDeploy } from '../scripts/deploy'
 import { ethToAttoeth } from '../scripts/libraries/type-helpers'
 import { startGanache } from '../scripts/libraries/ganache'
 import { Actor, tryCreateTestActorFromAddresses } from '../scripts/libraries/actor'
@@ -38,7 +38,7 @@ export async function testDeploy(jsonRpcEndpoint: string, signer: MnemonicSigner
 	const gasPrice = 10n**9n
 	const rpc = new FetchJsonRpc(jsonRpcEndpoint, fetch, async () => gasPrice, async () => signer.address, signer.sign)
 	const dependencies = new TestDependencies(rpc)
-	const deployments = await tryCreateTestActorFromAddresses(jsonRpcEndpoint, TestDependencies) || await deployAndCache(rpc, dependencies)
+	const deployments = await tryCreateTestActorFromAddresses(jsonRpcEndpoint, TestDependencies) || await deployAndCache(rpc, dependencies, testnetDeploy)
 	return { address: signer.address, signer: signer, rpc: rpc, dependencies: dependencies, ...deployments }
 }
 

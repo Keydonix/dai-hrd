@@ -5,14 +5,14 @@ export interface WithdrawDaiModel {
 	presentInfoTip: (info: string | JSX.Element) => void
 	withdraw: (attodaiHrd: bigint) => void
 	attodaiHrdBalance: bigint
-	rontoDsr: bigint
-	attodaiPerDaiHrd: { value: bigint, timeSeconds: number }
+	rontoDsr?: bigint
+	attodaiPerDaiHrd?: { value: bigint, timeSeconds: number }
 	withdrawState: 'idle' | 'withdrawing'
 	style?: React.CSSProperties
 }
 
 export function WithdrawDai(model: Readonly<WithdrawDaiModel>) {
-	const [ balanceInDai, setBalanceInDai ] = React.useState(0)
+	const [ balanceInDai, setBalanceInDai ] = React.useState<undefined|number>(undefined)
 	const [ daiHrdToWithdraw, setDaiHrdToWithdraw ] = React.useState('')
 	const attodaiHrdToWithdraw = decimalStringToBigintDai(daiHrdToWithdraw)
 
@@ -23,9 +23,14 @@ export function WithdrawDai(model: Readonly<WithdrawDaiModel>) {
 	}
 
 	React.useEffect(() => {
-		const timerId = setInterval(() => setBalanceInDai(daiHrdToDai(model.attodaiHrdBalance, model.attodaiPerDaiHrd.value, model.rontoDsr, model.attodaiPerDaiHrd.timeSeconds)), 1)
+		const timerId = setInterval(() => {
+			if (model.attodaiPerDaiHrd === undefined) return
+			if (model.rontoDsr === undefined) return
+			const dai = daiHrdToDai(model.attodaiHrdBalance, model.attodaiPerDaiHrd.value, model.rontoDsr, model.attodaiPerDaiHrd.timeSeconds)
+			setBalanceInDai(dai)
+		}, 1)
 		return () => clearTimeout(timerId)
-	}, [])
+	}, [model.attodaiHrdBalance, model.attodaiPerDaiHrd, model.rontoDsr])
 
 	return <article style={{
 		display: 'flex',
@@ -56,7 +61,7 @@ export function WithdrawDai(model: Readonly<WithdrawDaiModel>) {
 			color: '#F3F3F3',
 			flexGrow: 1,
 		}}>
-			{bigintDaiToDecimalString(model.attodaiHrdBalance, 3)} DAI-HRD ({balanceInDai.toFixed(3)} DAI)
+			{bigintDaiToDecimalString(model.attodaiHrdBalance, 3)} DAI-HRD ({balanceInDai === undefined ? '?' : balanceInDai.toFixed(3)} DAI)
 		</span>
 		{model.withdrawState === undefined &&
 			<SpinnerPanel style={{ height: '95px' }}/>
@@ -80,7 +85,7 @@ export function WithdrawDai(model: Readonly<WithdrawDaiModel>) {
 						fontStyle: 'normal',
 						fontWeight: 'normal',
 						fontSize: '14px',
-					}} type='text' placeholder='Amount of DAI-HRD to withdraw' onChange={event => setDaiHrdToWithdraw(event.target.value)} value={daiHrdToWithdraw} />
+					}} type='text' placeholder='DAI-HRD to withdraw' onChange={event => setDaiHrdToWithdraw(event.target.value)} value={daiHrdToWithdraw} />
 					<div style={{ width: '12px' }}></div>
 					<div onClick={() => setDaiHrdToWithdraw(bigintDaiToDecimalString(model.attodaiHrdBalance))} style={{
 						height: 'inherit',

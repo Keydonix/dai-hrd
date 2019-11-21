@@ -292,7 +292,7 @@ describe('DaiHrd', () => {
 	})
 
 	// This requires changing DaiHrd.updateAndFetchChi() from private to public
-	fit('chi variable gas usage report', async () => {
+	xit('chi variable gas usage report', async () => {
 		const SECONDS_TO_CHECK = [
 			1,
 			60 * 60,
@@ -355,13 +355,15 @@ describe('DaiHrd', () => {
 
 	xit('estimateGas', async () => {
 		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
+		await generateDai(alice, daiToAttodai(100))
 		await alice.daiHrd.deposit(await alice.dai.balanceOf_(alice.address))
 		const daiHrdBalanceInDai = await alice.daiHrd.balanceOfDenominatedInDai_(alice.address)
+		console.log(daiHrdBalanceInDai)
 		let aggregate = 0n
 		let min = 1000000n
 		let max = 0n
 		for (let i = 0; i < 100; ++i) {
-			const result = await alice.rpc.estimateGas({ from: alice.address, to: alice.daiHrd.address, data: await encodeMethod(keccak256.hash, 'withdrawToDenominatedInDai(address,uint256)', [alice.address, daiHrdBalanceInDai]), value: 0n, gasLimit: 1000000n, gasPrice: 1000000000n })
+			const result = await alice.rpc.estimateGas({ from: alice.address, to: alice.daiHrd.address, data: await encodeMethod(keccak256.hash, 'withdrawToDenominatedInDai(address,uint256)', [bob.address, daiToAttodai(10n)]), value: 0n, gasLimit: 1000000n, gasPrice: 1000000000n })
 			await ganache.advanceTime(1)
 			console.log(result)
 			aggregate += result

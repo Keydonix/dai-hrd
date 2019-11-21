@@ -10,9 +10,9 @@ declare global { interface Window { rootModel: AppModel } }
 
 // const jsonRpcAddress = 'https://dev-parity.keydonix.com'
 // const daiHrdAddress = 0xd2f610770e82faa6c4b514f47a673f70979a2aden
-const jsonRpcAddress = 'https://parity.zoltu.io'
-const daiHrdAddress = 0x9b869c2eaae08136c43d824ea75a2f376f1aa983n
 // const dependencies = new PrivateFetchDependencies(jsonRpcAddress)
+const jsonRpcAddress = 'https://parity.keydonix.com'
+const daiHrdAddress = 0x9b869c2eaae08136c43d824ea75a2f376f1aa983n
 const dependencies = new EthereumBrowserDependencies(jsonRpcAddress)
 
 
@@ -78,6 +78,24 @@ async function main() {
 						} finally {
 							account.withdrawState = 'idle'
 						}
+					}),
+					sendDai: errorHandler.asyncCatcher(async (recipient: bigint, attodai: bigint) => {
+						const account = rootModel.account
+						if (account === undefined || account === 'connecting') return
+						await contracts.daiHrd.withdrawToDenominatedInDai(recipient, attodai)
+						;[ account.attodaiHrdBalance, account.attodaiBalance ] = await Promise.all([
+							contracts.daiHrd.balanceOf_(account.address),
+							contracts.dai.balanceOf_(account.address),
+						])
+					}),
+					sendDaiHrd: errorHandler.asyncCatcher(async (recipient: bigint, attodaiHrd: bigint) => {
+						const account = rootModel.account
+						if (account === undefined || account === 'connecting') return
+						await contracts.daiHrd.send(recipient, attodaiHrd, new Uint8Array())
+						;[ account.attodaiHrdBalance, account.attodaiBalance ] = await Promise.all([
+							contracts.daiHrd.balanceOf_(account.address),
+							contracts.dai.balanceOf_(account.address),
+						])
 					}),
 					address: address,
 					attodaiHrdBalance,

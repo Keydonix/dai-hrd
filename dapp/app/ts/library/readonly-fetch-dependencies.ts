@@ -7,7 +7,7 @@ export class ReadonlyFetchJsonRpcDependencies implements Dependencies {
 	private readonly rpc: FetchJsonRpc
 
 	public constructor(jsonRpcEndpoint: string) {
-		this.rpc = new FetchJsonRpc(jsonRpcEndpoint, window.fetch.bind(window), async () => 10n**9n)
+		this.rpc = new FetchJsonRpc(jsonRpcEndpoint, window.fetch.bind(window), { gasPriceInAttoethProvider: async () => 10n**9n })
 	}
 
 	public readonly call = async (to: bigint, methodSignature: string, parameters: EncodableArray, value: bigint): Promise<Uint8Array> => {

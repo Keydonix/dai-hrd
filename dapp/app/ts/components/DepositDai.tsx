@@ -111,7 +111,7 @@ export function DepositDai(model: DepositDaiModel) {
 						fontStyle: 'normal',
 						fontWeight: 'normal',
 						fontSize: '14px',
-					}} type='text' placeholder='Amount of DAI to convert' onChange={event => setDaiToConvert(event.target.value)} value={daiToConvert} />
+					}} type='text' placeholder='DAI to convert' onChange={event => setDaiToConvert(event.target.value)} value={daiToConvert} />
 					<div onClick={() => setDaiToConvert(bigintDaiToDecimalString(model.attodaiBalance))} style={{
 						height: 'inherit',
 						width: '75px',

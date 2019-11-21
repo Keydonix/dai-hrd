@@ -29,3 +29,9 @@ export function daiHrdToDai(attodaiHrd: bigint, attodaiPerDaiHrd: bigint, rontod
 	const elapsed = nowSeconds - startTimeSeconds
 	return (Number(rontodsr) / 10**27) ** elapsed * Number(attodaiHrd) / 10**18 * Number(attodaiPerDaiHrd) / 10**18
 }
+
+export function tryHexStringAddressToBigint(hex: string): bigint | undefined {
+	const match = /^(?:0x)?([a-fA-F0-9]{40})$/.exec(hex)
+	if (match === null) return undefined
+	return BigInt(`0x${match[1]}`)
+}

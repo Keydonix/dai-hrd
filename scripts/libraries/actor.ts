@@ -10,11 +10,7 @@ import { JsonRpc } from '@zoltu/ethereum-types';
 import { lastDeployAddressPath } from './paths';
 import { fileExists } from './filesystem-extensions';
 
-export interface Actor {
-	address: bigint
-	signer: MnemonicSigner | PrivateKeySigner
-	rpc: FetchJsonRpc
-	dependencies: Dependencies
+export interface Contracts {
 	uniswapFactory: UniswapFactory
 	dai:Dai
 	vat:Vat
@@ -23,6 +19,13 @@ export interface Actor {
 	ethJoin: ETHJoin
 	daiHrd: DaiHrd
 	setDsr: SetDsr
+}
+
+export interface Actor extends Contracts {
+	address: bigint
+	signer: MnemonicSigner | PrivateKeySigner
+	rpc: FetchJsonRpc
+	dependencies: Dependencies
 }
 
 export async function duplicateActor(sourceActor: Actor, signer: MnemonicSigner | PrivateKeySigner, DependenciesConstructor: new (rpc: JsonRpc) => Dependencies): Promise<Actor> {
@@ -64,7 +67,7 @@ async function tryCreateActorFromAddresses(signer: MnemonicSigner | PrivateKeySi
 	}
 }
 
-export async function tryCreateTestActorFromAddresses(jsonRpcEndpoint: string, DependenciesConstructor: new (rpc: JsonRpc) => Dependencies): Promise<Actor | undefined> {
+export async function tryCreateTestActorFromAddresses(jsonRpcEndpoint: string, DependenciesConstructor: new (rpc: JsonRpc) => Dependencies) {
 	const signer = await MnemonicSigner.createTest(0)
 	const rpc = new FetchJsonRpc(jsonRpcEndpoint, fetch, async () => 10n**9n, async () => signer.address, signer.sign)
 	const dependencies = new DependenciesConstructor(rpc)
