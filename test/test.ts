@@ -262,6 +262,30 @@ describe('DaiHrd', () => {
 		expect(await alice.vat.dai_(alice.address)).toEqual(attodaiToDeposit * 10n**27n)
 	})
 
+	it('operator send', async () => {
+		const attodaiToDeposit = daiToAttodai(10_000n)
+		await generateDai(alice, attodaiToDeposit)
+		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
+		await alice.daiHrd.deposit(attodaiToDeposit)
+
+		// Try to perform operator send before authorize, ensure it rejects
+		expectAsync(bob.daiHrd.operatorSend(alice.address, carol.address, attodaiToDeposit, new Uint8Array(), new Uint8Array())).toBeRejected()
+		await alice.daiHrd.authorizeOperator(bob.signer.address);
+
+		const sendEvents = await bob.daiHrd.operatorSendDenominatedInDai(alice.address, carol.address, attodaiToDeposit, new Uint8Array(), new Uint8Array());
+		expect(sendEvents.filter(event => event.name === 'Sent')).toEqual([{
+			name: 'Sent',
+			parameters: { operator: bob.address, from: alice.address, to: carol.address, amount: attodaiToDeposit, data: new Uint8Array(), operatorData: new Uint8Array() }
+		}])
+
+		const aliceBalance = await alice.daiHrd.balanceOf_(alice.address)
+		const bobBalance = await bob.daiHrd.balanceOf_(bob.address)
+		const carolBalance = await carol.daiHrd.balanceOf_(carol.address)
+
+		expect(aliceBalance).toEqual(0n)
+		expect(bobBalance).toEqual(0n)
+		expect(carolBalance).toEqual(attodaiToDeposit)
+	})
 
 	xit('sandbox', async () => {
 	})
