@@ -54,9 +54,11 @@ export function App(model: Readonly<AppModel>) {
 		{model.account && model.account !== 'connecting' && <>
 			<section style={{ display: 'grid', gridTemplateColumns: '300px 300px', gridTemplateRows: '200px', gap: '15px' }}>
 				<DepositDai presentInfoTip={setTipContent} deposit={model.account.depositIntoDaiHrd} attodaiBalance={model.account.attodaiBalance} depositState={model.account.depositState} approveDaiHrdToSpendDai={model.account.approveDaiHrdToSpendDai} />
-				<WithdrawDai presentInfoTip={setTipContent} withdraw={model.account.withdrawIntoDai} withdrawState={model.account.withdrawState} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
-				<SendDai sendDai={model.account.sendDai} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
-				<SendDaiHrd sendDaiHrd={model.account.sendDaiHrd} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
+				{model.account.attodaiHrdBalance && <>
+					<WithdrawDai presentInfoTip={setTipContent} withdraw={model.account.withdrawIntoDai} withdrawState={model.account.withdrawState} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
+					<SendDai sendDai={model.account.sendDai} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
+					<SendDaiHrd sendDaiHrd={model.account.sendDaiHrd} attodaiHrdBalance={model.account.attodaiHrdBalance} attodaiPerDaiHrd={model.attodaiPerDaiHrd} rontoDsr={model.rontodsr} />
+				</>}
 			</section>
 		</>}
 		<div style={{ height: '15px', flexShrink: 0 }}></div>
