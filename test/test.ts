@@ -15,6 +15,7 @@ import { Actor, duplicateActor } from '../scripts/libraries/actor';
 import { TestDependencies } from './test-dependencies';
 import { generateDai } from '../scripts/seed/seed-maker';
 import { resetMaker } from '../scripts/seed/reset-maker';
+import { IOffChainTransaction } from "@zoltu/ethereum-types";
 
 const MAX_APPROVAL = 2n**256n-1n
 
@@ -288,6 +289,68 @@ describe('DaiHrd', () => {
 	})
 
 	xit('sandbox', async () => {
+	})
+
+	// This requires changing DaiHrd.updateAndFetchChi() from private to public
+	fit('chi variable gas usage report', async () => {
+		const SECONDS_TO_CHECK = [
+			1,
+			60 * 60,
+			60 * 60 * 24,
+			60 * 60 * 24 * 365,
+			60 * 60 * 24 * 365 * 10,
+			0b1111111111111111111111111, // 33_554_431 ~ 1 year
+			0b1111111111111111111111111111, // 268,435,455 ~ 10 year
+		]
+		const attodaiToDeposit = daiToAttodai(10_000n)
+		await generateDai(alice, attodaiToDeposit)
+		await alice.dai.approve(alice.daiHrd.address, MAX_APPROVAL)
+		await alice.daiHrd.deposit(attodaiToDeposit)
+
+		const baseEstimateTx = {
+			from: alice.address,
+			to: alice.daiHrd.address,
+			value: 0n,
+			gasLimit: 1000000n,
+			gasPrice: 1000000000n
+		};
+
+		const withdrawToEstimate = {
+			...baseEstimateTx,
+			data: await encodeMethod(keccak256.hash, 'withdrawTo(address,uint256)', [alice.address, daiToAttodai(1)]),
+		};
+
+		const calculatedChiEstimate = {
+			...baseEstimateTx,
+			data: await encodeMethod(keccak256.hash, 'calculatedChi()', []),
+		};
+
+		const updateAndFetchChiEstimate = {
+			...baseEstimateTx,
+			data: await encodeMethod(keccak256.hash, 'updateAndFetchChi()', []),
+		}
+
+		async function printEstimatesBySecond(tx: IOffChainTransaction) {
+			const results: Array<[number, bigint]> = []
+			await alice.pot.drip();
+			results.push([0, await alice.rpc.estimateGas(tx)])
+			for (const seconds of SECONDS_TO_CHECK) {
+				await alice.pot.drip();
+				await ganache.advanceTime(seconds)
+				results.push([seconds, await alice.rpc.estimateGas(tx)])
+			}
+			results.forEach(report => console.log(`${report[1]} gas : ${report[0]} seconds`))
+		}
+
+		console.log("withdrawTo()")
+		await printEstimatesBySecond(withdrawToEstimate)
+
+		console.log("\ncalculateChi()")
+		await printEstimatesBySecond(calculatedChiEstimate);
+
+		console.log("\nupdateAndFetchChi()")
+		await printEstimatesBySecond(updateAndFetchChiEstimate);
+
 	})
 
 	xit('estimateGas', async () => {
