@@ -15,7 +15,7 @@ import { Actor, duplicateActor } from '../scripts/libraries/actor';
 import { TestDependencies } from './test-dependencies';
 import { generateDai } from '../scripts/seed/seed-maker';
 import { resetMaker } from '../scripts/seed/reset-maker';
-import { IOffChainTransaction } from "@zoltu/ethereum-types/output-node";
+import { IOffChainTransaction } from "@zoltu/ethereum-types";
 
 const MAX_APPROVAL = 2n**256n-1n
 
