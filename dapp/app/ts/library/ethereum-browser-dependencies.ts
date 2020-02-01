@@ -4,12 +4,10 @@ import { encodeMethod } from '@zoltu/ethereum-abi-encoder';
 import { keccak256 } from '@zoltu/ethereum-crypto';
 import { ReadonlyFetchJsonRpcDependencies } from './readonly-fetch-dependencies';
 
-interface JsonRpcLike { jsonrpc:'2.0', id:unknown, result:unknown }
-
 declare global {
 	interface Window {
 		ethereum: {
-			sendAsync: (options: { jsonrpc: '2.0', method: JsonRpcMethod | 'eth_requestAccounts', params: readonly unknown[] }, callback: (error: Error, response: JsonRpcLike) => void) => void
+			sendAsync: (options: { jsonrpc: '2.0', method: JsonRpcMethod | 'eth_requestAccounts', params: readonly unknown[] }, callback: (error: Error, response: unknown) => void) => void
 		}
 	}
 }
@@ -32,7 +30,7 @@ export class EthereumBrowserDependencies implements Dependencies {
 			data: Bytes.fromByteArray(data).to0xString(),
 			value: numberToHexString(value),
 		})
-		return Bytes.fromHexString(result.result as string)
+		return Bytes.fromHexString(result as string)
 	}
 
 	public readonly submitTransaction = async (address: bigint, methodSignature: string, methodParameters: EncodableArray, value: bigint): Promise<PartialTransactionReceipt> => {
@@ -49,7 +47,7 @@ export class EthereumBrowserDependencies implements Dependencies {
 		} as const
 		const gasEstimate = await this.estimateGas(transaction)
 		const transactionHashString = await this.send('eth_sendTransaction', { ...transaction, gas: numberToHexString(gasEstimate + 55_000n)})
-		const transactionHash = BigInt(transactionHashString.result as string)
+		const transactionHash = BigInt(transactionHashString as string)
 		let receipt = await this.getTransactionReceipt(transactionHash)
 		while (receipt === null || receipt.blockNumber === null) {
 			await sleep(1000)
@@ -60,9 +58,9 @@ export class EthereumBrowserDependencies implements Dependencies {
 	}
 
 	public readonly enable = async (): Promise<readonly bigint[]> => {
-		const response = await this.send('eth_requestAccounts')
+		let response = await this.send('eth_requestAccounts')
 		this.enabled = true
-		const result = response.result as readonly string[]
+		const result = response as readonly string[]
 		const accounts = result.map(addressString => BigInt(addressString))
 		if (accounts.length > 0) this.address = accounts[0]
 		return accounts
@@ -70,22 +68,27 @@ export class EthereumBrowserDependencies implements Dependencies {
 
 	public readonly noBrowserExtensionNeeded = () => !!window.ethereum
 
-	private readonly send = async (method: JsonRpcMethod | 'eth_requestAccounts', ...params: unknown[]): Promise<JsonRpcLike> => {
+	private readonly send = async (method: JsonRpcMethod | 'eth_requestAccounts', ...params: unknown[]): Promise<unknown> => {
 		return new Promise((resolve, reject) => {
-			window.ethereum.sendAsync({ jsonrpc: '2.0', method, params }, (error, result) => error ? reject(error) : resolve(result))
+			window.ethereum.sendAsync({ jsonrpc: '2.0', method, params }, (error, result) => {
+				if (error) return reject(error)
+				// https://github.com/MetaMask/metamask-extension/issues/7970
+				if (isJsonRpcLike(result)) return resolve(result.result)
+				return resolve(result)
+			})
 		})
 	}
 
 	private readonly estimateGas = async (transaction: unknown): Promise<bigint> => {
 		const response = await this.send('eth_estimateGas', transaction)
-		if (!/0x[a-zA-Z0-9]+/.test(response.result as string)) throw new Error(`Unexpected result from 'eth_estimateGas': ${response.result}`)
-		return BigInt(response.result)
+		if (!/0x[a-zA-Z0-9]+/.test(response as string)) throw new Error(`Unexpected result from 'eth_estimateGas': ${response}`)
+		return BigInt(response)
 	}
 
 	private readonly getTransactionReceipt = async (transactionHash: bigint): Promise<TransactionReceipt | null> => {
 		const response = await this.send('eth_getTransactionReceipt', hashToHexString(transactionHash))
-		if (response.result === null) return null
-		return new TransactionReceipt(response.result as RawTransactionReceipt)
+		if (response === null) return null
+		return new TransactionReceipt(response as RawTransactionReceipt)
 	}
 }
 
@@ -103,4 +106,8 @@ function numberToHexString(value: bigint): string {
 
 function hashToHexString(value: bigint): string {
 	return `0x${value.toString(16).padStart(64,'0')}`
+}
+
+function isJsonRpcLike(maybe: unknown): maybe is { result: unknown } {
+	return typeof maybe === 'object' && maybe !== null && 'result' in maybe
 }
