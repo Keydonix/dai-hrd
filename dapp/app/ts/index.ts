@@ -11,7 +11,7 @@ declare global { interface Window { rootModel: AppModel } }
 // const jsonRpcAddress = 'https://dev-parity.keydonix.com'
 // const daiHrdAddress = 0xd2f610770e82faa6c4b514f47a673f70979a2aden
 // const dependencies = new PrivateFetchDependencies(jsonRpcAddress)
-const jsonRpcAddress = 'https://parity.keydonix.com'
+const jsonRpcAddress = 'https://ethereum.keydonix.com'
 const daiHrdAddress = 0x9b869c2eaae08136c43d824ea75a2f376f1aa983n
 const dependencies = new EthereumBrowserDependencies(jsonRpcAddress)
 
