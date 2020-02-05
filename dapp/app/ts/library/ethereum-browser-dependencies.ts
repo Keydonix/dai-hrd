@@ -7,7 +7,7 @@ import { ReadonlyFetchJsonRpcDependencies } from './readonly-fetch-dependencies'
 declare global {
 	interface Window {
 		ethereum: {
-			sendAsync: (options: { jsonrpc: '2.0', method: JsonRpcMethod | 'eth_requestAccounts', params: readonly unknown[] }, callback: (error: Error, response: unknown) => void) => void
+			sendAsync: (options: { jsonrpc: '2.0', id: number|string|null, method: JsonRpcMethod | 'eth_requestAccounts', params: readonly unknown[] }, callback: (error: Error, response: unknown) => void) => void
 		}
 	}
 }
@@ -29,7 +29,7 @@ export class EthereumBrowserDependencies implements Dependencies {
 			to: addressToHexString(address),
 			data: Bytes.fromByteArray(data).to0xString(),
 			value: numberToHexString(value),
-		})
+		}, 'latest')
 		return Bytes.fromHexString(result as string)
 	}
 
@@ -70,7 +70,7 @@ export class EthereumBrowserDependencies implements Dependencies {
 
 	private readonly send = async (method: JsonRpcMethod | 'eth_requestAccounts', ...params: unknown[]): Promise<unknown> => {
 		return new Promise((resolve, reject) => {
-			window.ethereum.sendAsync({ jsonrpc: '2.0', method, params }, (error, result) => {
+			window.ethereum.sendAsync({ jsonrpc: '2.0', id: 0, method, params }, (error, result) => {
 				if (error) return reject(error)
 				// https://github.com/MetaMask/metamask-extension/issues/7970
 				if (isJsonRpcLike(result)) return resolve(result.result)

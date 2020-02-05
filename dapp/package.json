@@ -13,7 +13,7 @@
 		"@zoltu/ethereum-abi-encoder": "3.2.2",
 		"@zoltu/ethereum-crypto": "2.1.1",
 		"@zoltu/ethereum-types": "8.2.3",
-		"@zoltu/ethereum-fetch-json-rpc": "11.0.0",
+		"@zoltu/ethereum-fetch-json-rpc": "11.0.3",
 		"es-module-shims": "0.4.6",
 		"react": "16.11.0",
 		"react-dom": "16.11.0"
