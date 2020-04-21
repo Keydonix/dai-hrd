@@ -62,7 +62,7 @@ export function App(model: Readonly<AppModel>) {
 			</section>
 		</>}
 		<div style={{ height: '15px', flexShrink: 0 }}></div>
-		<iframe style={{ width: '615px', minHeight: '768px', border: 'none', borderRadius: '4px' }} src='https://uniswap.exchange/swap?outputCurrency=0x9B869c2eaae08136C43d824EA75A2F376f1aA983'></iframe>
+		<iframe style={{ width: '615px', minHeight: '915px', border: 'none', borderRadius: '4px' }} src='https://uniswap.exchange/swap?outputCurrency=0x9B869c2eaae08136C43d824EA75A2F376f1aA983'></iframe>
 		<div style={{ flexGrow: 1 }}></div>
 		<nav style={{ display: 'flex', flexDirection: 'row', padding: '15px' }}>
 			<a href='https://discord.gg/b88nb2S'>
